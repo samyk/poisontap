@@ -4,7 +4,7 @@ Created by <a href="https://twitter.com/samykamkar" target=_blank>@SamyKamkar</a
 
 When **[PoisonTap](https://samy.pl/poisontap)** (<a href="http://amzn.to/2eMr2WY" target="_blank">Raspberry Pi Zero</a> & Node.js) is plugged into a **locked/password protected** computer, it:
 
-* emulates an Ethernet device over USB
+* emulates an Ethernet device over USB (or Thunderbolt)
 * hijacks **all Internet traffic** from the machine (*despite* being a low priority/unknown network interface)
 * siphons and stores HTTP cookies and sessions from the web browser for the Alexa top 1,000,000 websites
 * exposes the **internal router** to the attacker, making it accessible **remotely** via outbound WebSocket and DNS rebinding (thanks <a href="https://maustin.net" target=_blank>Matt Austin</a> for rebinding idea!)
@@ -49,7 +49,7 @@ PoisonTap is built for the $5 <a href="http://amzn.to/2eMr2WY" target="_blank">R
 
 # How PoisonTap Works
 
-PoisonTap produces a cascading effect by exploiting the existing trust in various mechanisms of a machine and network, including USB, DHCP, DNS, and HTTP, to produce a snowball effect of information exfiltration, network access and installation of semi-permanent backdoors.
+PoisonTap produces a cascading effect by exploiting the existing trust in various mechanisms of a machine and network, including USB/Thunderbolt, DHCP, DNS, and HTTP, to produce a snowball effect of information exfiltration, network access and installation of semi-permanent backdoors.
 
 ![Network Hijacking](https://samy.pl/poisontap/network2.gif?)
 
@@ -58,7 +58,7 @@ In a nutshell, PoisonTap performs the following:
 
 ### *Network Hijacking*
 * Attacker plugs PoisonTap (such as weaponized <a href="http://amzn.to/2eMr2WY" target="_blank">Raspberry Pi Zero</a>) into a locked computer (even if computer is password protected)
-* PoisonTap emulates an Ethernet device (eg, Ethernet over USB) -- by default, Windows, OS X and Linux recognize an ethernet device, automatically loading it as a low-priority network device and performing a DHCP request across it, **even when the machine is locked or password protected**
+* PoisonTap emulates an Ethernet device (eg, Ethernet over USB/Thunderbolt) -- by default, Windows, OS X and Linux recognize an ethernet device, automatically loading it as a low-priority network device and performing a DHCP request across it, **even when the machine is locked or password protected**
 * PoisonTap responds to the DHCP request and provides the machine with an IP address, however the DHCP response is crafted to tell the machine that the entire IPv4 space (0.0.0.0 - 255.255.255.255) is part of the PoisonTap's local network, rather than a small subnet (eg 192.168.0.0 - 192.168.0.255)
   * Normally it would be irrelevant if a secondary network device connects to a machine as it will be given lower priority than the existing (trusted) network device and won't supersede the gateway for Internet traffic, *but...*
   * Any routing table / gateway priority / network interface service order security is **bypassed** due to the priority of "LAN traffic" over "Internet traffic"
@@ -149,7 +149,7 @@ If you are running a web server, securing against PoisonTap is simple:
 
 * Adding <a href="https://amzn.to/2fX0I1e" target=_blank>cement</a> to your USB and Thunderbolt ports can be effective
 * Closing your browser every time you walk away from your machine can work, but is entirely impractical
-* Disabling USB ports is also effective, though also impractical
+* Disabling USB/Thunderbolt ports is also effective, though also impractical
 * Locking your computer has **no effect** as the network and USB stacks operate while the machine is locked, however, going into an encrypted sleep mode where a key is required to decrypt memory (e.g., FileVault2 + deep sleep) solves most of the issues as your browser will no longer make requests, even if woken up
 
 -----
