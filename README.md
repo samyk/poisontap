@@ -147,7 +147,7 @@ If you are running a web server, securing against PoisonTap is simple:
 
 ### Desktop Security
 
-* Adding cement to your USB and Thunderbolt ports can be effective
+* Adding <a href="https://amzn.to/2fX0I1e" target=_blank>cement</a> to your USB and Thunderbolt ports can be effective
 * Closing your browser every time you walk away from your machine can work, but is entirely impractical
 * Disabling USB ports is also effective, though also impractical
 * Locking your computer has **no effect** as the network and USB stacks operate while the machine is locked, however, going into an encrypted sleep mode where a key is required to decrypt memory (e.g., FileVault2 + deep sleep) solves most of the issues as your browser will no longer make requests, even if woken up
