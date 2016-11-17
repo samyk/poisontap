@@ -4,7 +4,7 @@
 <script type="text/javascript">
 var obj;
 var content = document.getElementById('content');
-var socket = new WebSocket('ws://samy.pl:1337');
+var socket = new WebSocket('ws://YOUR.DOMAIN:1337');
 socket.onopen = function () {
 	socket.send(JSON.stringify({'req': 'hi'}));
 	//socket.send('hello from the client');
