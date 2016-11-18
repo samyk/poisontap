@@ -167,9 +167,9 @@ sudo bash
 # If Raspbian BEFORE 2016-05-10, then run next line:
 BRANCH=next rpi-update
 
+echo -e "\nauto usb0\nallow-hotplug usb0\niface usb0 inet static\n\taddress 1.0.0.1\n\tnetmask 0.0.0.0" >> /etc/network/interfaces
 echo "dtoverlay=dwc2" >> /boot/config.txt
-echo "dwc2" >> /etc/modules
-echo "g_ether" >> /etc/modules
+echo -e "dwc2\ng_ether" >> /etc/modules
 echo "/bin/sh /home/pi/poisontap/pi_startup.sh" >> /etc/rc.local
 mkdir /home/pi/poisontap
 chown -R pi /home/pi/poisontap
@@ -177,7 +177,7 @@ apt-get update && apt-get upgrade
 apt-get -y install isc-dhcp-server dsniff screen nodejs
 ```
 
-Place dhcpd.conf in /etc/dhcp/dhcpd.conf and the rest of the files in /home/pi/poisontap
+Place dhcpd.conf in /etc/dhcp/dhcpd.conf and the rest of the files in /home/pi/poisontap, then reboot to ensure everything is working.
 
 There are a number of <a href="https://github.com/samyk/poisontap" target=_blank>files in the repo</a>, which are used on different sides. The list:
 
