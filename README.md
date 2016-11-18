@@ -34,7 +34,7 @@ When **[PoisonTap](https://samy.pl/poisontap)** (<a href="http://amzn.to/2eMr2WY
 
 # Demo
 
-PoisonTap is built for the $5 <a href="http://amzn.to/2eMr2WY" target="_blank">Raspberry Pi Zero</a> without any additional components other than a <a href="https://amzn.to/2fUMdah" target="_blank">micro-USB cable</a> & <a href="https://amzn.to/2fWgKsd" target="_blank">microSD card</a>, but can work on other devices that can emulate USB gadgets such as <a href="https://inversepath.com/usbarmory" target="_blank">USB Armory</a> and <a href="https://lanturtle.com/" target=_blank>LAN Turtle</a>.
+PoisonTap is built for the $5 <a href="http://amzn.to/2eMr2WY" target="_blank">Raspberry Pi Zero</a> without any additional components other than a <a href="https://amzn.to/2fUMdah" target="_blank">micro-USB cable</a> & <a href="https://amzn.to/2fWgKsd" target="_blank">microSD card</a>, or can work on any Raspberry Pi (1/2/3) with an Ethernet-to-USB/Thunderbolt dongle, or can work on other devices that can emulate USB gadgets such as <a href="https://inversepath.com/usbarmory" target="_blank">USB Armory</a> and <a href="https://lanturtle.com/" target=_blank>LAN Turtle</a>.
 
 **Live demonstration** and more details available in the video:
 <a href="https://www.youtube.com/watch?v=Aatp5gCskvk" target="_blank"><img src= "https://samy.pl/poisontap/ptap-thumbnail-small.png" alt="MagSpoof" border="1" /></a>
@@ -159,7 +159,26 @@ If you are running a web server, securing against PoisonTap is simple:
 
 -----
 
-# File Breakdown
+# Installation / File Breakdown
+```bash
+# Instructions adjusted from https://gist.github.com/gbaman/50b6cca61dd1c3f88f41
+sudo bash
+
+# If Raspbian BEFORE 2016-05-10, then run next line:
+BRANCH=next rpi-update
+
+echo "dtoverlay=dwc2" >> /boot/config.txt
+echo "dwc2" >> /etc/modules
+echo "g_ether" >> /etc/modules
+echo "/bin/sh /home/pi/poisontap/pi_startup.sh" >> /etc/rc.local
+mkdir /home/pi/poisontap
+chown -R pi /home/pi/poisontap
+apt-get update && apt-get upgrade
+apt-get -y install isc-dhcp-server dsniff screen nodejs
+```
+
+Place dhcpd.conf in /etc/dhcp/dhcpd.conf and the rest of the files in /home/pi/poisontap
+
 There are a number of <a href="https://github.com/samyk/poisontap" target=_blank>files in the repo</a>, which are used on different sides. The list:
 
 * **backdoor.html** - Whenever a http://hostname/PoisonTap URL is hit to exfiltrate cookies, this file is what is returned as the force-cached content. It contains a backdoor that produces an outbound websocket to samy.pl:1337 (adjustable to any host/port) that remains opens waiting for commands from the server. This means when you load an iframe on a site, such as http://hostname/PoisonTap, this is the content that gets populated (even after PoisonTap is removed from the machine).
