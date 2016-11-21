@@ -1,5 +1,5 @@
 {
-  "name": "workspace",
+  "name": "poisontap",
   "version": "1.0.0",
   "description": "Exploits locked/password protected computers over USB, drops persistent WebSocket-based backdoor, exposes internal router, and siphons cookies using Raspberry Pi Zero & Node.js.",
   "main": "backend_server.js",
@@ -15,7 +15,7 @@
     "backdoor",
     "raspberry pi"
   ],
-  "author": "",
+  "author": "Peter Benjamin <petermbenjamin@gmail.com>",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/pmbenjamin/poisontap/issues"
