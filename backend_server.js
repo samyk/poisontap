@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 // PoisonTap by Samy Kamkar - https://samy.pl/poisontap
 
 const WebSocketServer = require('websocket').server;
