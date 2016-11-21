@@ -1,0 +1,23 @@
+{
+  "name": "workspace",
+  "version": "1.0.0",
+  "description": "Created by <a href=\"https://twitter.com/samykamkar\" target=_blank>@SamyKamkar</a> || <a href=\"https://samy.pl\" target=_blank>https://samy.pl</a>",
+  "main": "backend_server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pmbenjamin/poisontap.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pmbenjamin/poisontap/issues"
+  },
+  "homepage": "https://github.com/pmbenjamin/poisontap#readme",
+  "dependencies": {
+    "websocket": "^1.0.23"
+  }
+}
