@@ -73,7 +73,7 @@ var server = http.createServer(function(request, response) {
 		"Cache-Control": "public, max-age=99936000",
 		"Expires": "Sat, 26 Jul 2040 05:00:00 GMT",
 		"Last-Modified": "Tue, 15 Nov 1994 12:45:26 GMT",
-		"Access-Control-Allow-Origin: *"
+		"Access-Control-Allow-Origin": "*"
 	};
 
 	// cache for a very long time to poison future requests after we're gone
