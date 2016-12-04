@@ -88,6 +88,6 @@ wsServer.on('request', (request) => {
     for (var i in conns)
       if (conns[i] == connection)
       //if (_.isEqual(conns[i], connection)) // XXX
-        conn.splice(i, 1)
+        conns.splice(i, 1)
   })
 })
