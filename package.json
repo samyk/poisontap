@@ -1,0 +1,37 @@
+{
+  "name": "poisontap",
+  "version": "1.0.0",
+  "description": "Exploits locked/password protected computers over USB, drops persistent WebSocket-based backdoor, exposes internal router, and siphons cookies using Raspberry Pi Zero & Node.js.",
+  "main": "backend_server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint --fix ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pmbenjamin/poisontap.git"
+  },
+  "keywords": [
+    "backdoor",
+    "raspberry pi"
+  ],
+  "author": "Peter Benjamin <petermbenjamin@gmail.com>",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/pmbenjamin/poisontap/issues"
+  },
+  "homepage": "https://github.com/pmbenjamin/poisontap#readme",
+  "dependencies": {
+    "websocket": "^1.0.23"
+  },
+  "devDependencies": {
+    "eslint": "^3.10.2",
+    "eslint-config-airbnb": "^13.0.0",
+    "eslint-plugin-import": "^2.2.0",
+    "eslint-plugin-jsx-a11y": "^2.2.3",
+    "eslint-plugin-react": "^6.7.1"
+  },
+  "engines": {
+    "node": "6.9.1"
+  }
+}
