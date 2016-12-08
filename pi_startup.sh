@@ -4,12 +4,19 @@
 #  by samy kamkar
 #  http://samy.pl/poisontap
 #  01/08/2016
+#
+# If you find this doesn't come up automatically as an ethernet device
+# change idVendor/idProduct to 0x04b3/0x4010
 
 cd /sys/kernel/config/usb_gadget/
 mkdir -p poisontap
 cd poisontap
-echo 0x1d6b > idVendor # Linux Foundation
-echo 0x0104 > idProduct # Multifunction Composite Gadget
+
+#echo 0x04b3 > idVendor  # IN CASE BELOW DOESN'T WORK
+#echo 0x4010 > idProduct # IN CASE BELOW DOESN'T WORK
+echo 0x1d6b > idVendor   # Linux Foundation
+echo 0x0104 > idProduct  # Multifunction Composite Gadget
+
 echo 0x0100 > bcdDevice # v1.0.0
 echo 0x0200 > bcdUSB # USB2
 mkdir -p strings/0x409

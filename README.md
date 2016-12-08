@@ -160,6 +160,9 @@ If you are running a web server, securing against PoisonTap is simple:
 -----
 
 # Installation / File Breakdown
+
+Note: If you find the device is NOT acting as an Ethernet controller automatically (older versions of Windows, for example), you can [change the VID and PID in pi_startup.sh](https://github.com/samyk/poisontap/issues/8#issuecomment-265818957)
+
 ```bash
 # Instructions adjusted from https://gist.github.com/gbaman/50b6cca61dd1c3f88f41
 sudo bash
