@@ -1,0 +1,22 @@
+{
+  "name": "poisontap",
+  "version": "1.0.1",
+  "description": "Nice Little Tool",
+  "author": "SammyK",
+  "twitter": "@sammyk",
+  "repository": {
+
+  "type": "git",
+  	"url": "https://github.com/samyk/poisontap.git"
+},
+
+  "bugs": {
+  	"url": "https://github.com/samyk/poisontap.git"
+},
+
+  "dependencies": {
+	"ws": "^1.0.0"
+},
+
+  "license": "ECL-2.0"
+}
