@@ -147,6 +147,7 @@ If you are running a web server, securing against PoisonTap is simple:
 
 ### Desktop Security
 
+* Make your browser and other vulnerable applications go through <a href="https://www.torproject.org/" target=_blank>Tor</a>.
 * Adding <a href="https://amzn.to/2fX0I1e" target=_blank>cement</a> to your USB and Thunderbolt ports can be effective
 * Closing your browser every time you walk away from your machine can work, but is entirely impractical
 * Disabling USB/Thunderbolt ports is also effective, though also impractical
